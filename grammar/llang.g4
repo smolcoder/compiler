@@ -1,12 +1,7 @@
 grammar LLang;
 
 programm
-    : programmStatement*
-    ;
-
-programmStatement
-    : variableDeclarationStatement
-    | functionDeclaration
+    : (variableDeclarationStatement | functionDeclaration)*
     ;
 
 functionDeclaration
@@ -28,25 +23,65 @@ functionParameterList
 functionParameter
     : Identifier;
 
+variableDeclarationStatement
+    : variableDeclaration ';'
+    ;
+
+variableDeclaration
+    : type Identifier ('=' variableInitializer)?
+    ;
+
+variableInitializer
+    : expression
+    | arrayInitializer
+    ;
+
+arrayInitializer
+    : '[' variableInitializerList? ']'
+    ;
+
+variableInitializerList
+    : variableInitializer (',' variableInitializer)*
+    ;
+
+type
+    : primitiveType
+    | arrayType
+    ;
+
+primitiveType
+    : BOOL
+    | INT
+    | STR
+    ;
+
+arrayType
+    : primitiveType dims
+    ;
+
+dims
+    : ('[' ']')+
+    ;
+
+
 block
-    : '{' blockStatements? '}'
+    : '{' statement* '}'
     ;
 
-blockStatements
-    : blockStatement blockStatement*
-    ;
-
-blockStatement
-    : variableDeclaration
-    | block
-    | assignment
+statement
+    : block
+    | assignmentStatement
     | ifStatement
-    | functionInvocation
+    | functionInvocationStatement
     | forStatement
     ;
 
+forStatement
+    : FOR '(' forInit? ';' expression? ';' forUpdate? ')' block
+    ;
+
 forInit
-    : variableDeclaration
+    : assignment
     ;
 
 forUpdate
@@ -54,24 +89,12 @@ forUpdate
     | functionInvocation
     ;
 
-forStatement
-    : FOR '(' forInit? ';' expression? ';' forUpdate? ')' block
-    ;
-
 ifStatement
     : IF '(' expression ')' (ELIF block)* (ELSE block)?
     ;
 
-variableDeclarationStatement
-    : variableDeclaration ';'
-    ;
-
-variableDeclaration
-    : Identifier ('=' variableInitializer)?
-    ;
-
-variableInitializer
-    : expression
+functionInvocationStatement
+    : functionInvocation ';'
     ;
 
 functionInvocation
@@ -79,12 +102,27 @@ functionInvocation
     ;
 
 expression
-    : ternaryExpression
-    | assignment
+    : assignment
+    | '-' expression
+    | '!' expression
+    | expression ('*' | '/' | '%') expression
+    | expression ('-' | '+') expression
+    | expression ('>' | '>=' | '<=' | '<') expression
+    | expression ('==' | '!=') expression
+    | expression '&&' expression
+    | expression '||' expression
+    | functionInvocation
+    | literal
+    | Identifier
+    | '(' expression ')'
+    ;
+
+assignmentStatement
+    : assignment ';'
     ;
 
 assignment
-	:	leftHandSide assignmentOperator ternaryExpression
+	:	leftHandSide assignmentOperator expression
 	;
 
 leftHandSide
@@ -96,68 +134,11 @@ expressionName
     : Identifier
     ;
 
-ternaryExpression
-    : orExpression
-    | orExpression '?' expression ':' ternaryExpression
-    ;
-
-orExpression
-    : andExpression
-    | orExpression '||' andExpression
-    ;
-
-andExpression
-    : equalityExpression
-    | andExpression '&&' equalityExpression
-    ;
-
-equalityExpression
-    : relationalExpression
-    | equalityExpression '==' relationalExpression
-    | equalityExpression '!=' relationalExpression
-    ;
-
-relationalExpression
-    : additiveExpression
-    | relationalExpression '<' additiveExpression
-    | relationalExpression '>' additiveExpression
-    | relationalExpression '<=' additiveExpression
-    | relationalExpression '>=' additiveExpression
-    ;
-
-additiveExpression
-    : multiplicativeExpression
-    | additiveExpression '+' multiplicativeExpression
-    | additiveExpression '-' multiplicativeExpression
-    ;
-
-multiplicativeExpression
-    : unaryExpression
-    | multiplicativeExpression '*' unaryExpression
-    | multiplicativeExpression '/' unaryExpression
-    | multiplicativeExpression '%' unaryExpression
-    ;
-
-unaryExpression
-	: '+' unaryExpression
-	| '-' unaryExpression
-	| '!' unaryExpression
-	| primary
-	| expressionName
-	;
-
-primary
-    : literal
-    | '(' expression ')'
-    | functionInvocation
-    ;
-
 literal
     : IntegerLiteral
     | StringLiteral
     | BooleanLiteral
     ;
-
 
 assignmentOperator
 	:	'='
@@ -169,18 +150,22 @@ assignmentOperator
 	;
 
 // keywords
-BOOLEAN : 'bool';
+
+// Types
+BOOL : 'Bool';
+INT : 'Int';
+STR : 'Str';
+VOID : 'Bool';
+
 CLASS : 'class';
 DOUBLE : 'double';
 ELSE : 'else';
 FOR : 'for';
 IF : 'if';
 ELIF : 'elif';
-INT : 'int';
 NEW : 'new';
 RETURN : 'return';
 THIS : 'this';
-VOID : 'void';
 WHILE : 'while';
 FUN : 'fun';
 
@@ -205,14 +190,11 @@ GE : '>=';
 NOTEQUAL : '!=';
 AND : '&&';
 OR : '||';
-INC : '++';
-DEC : '--';
 ADD : '+';
 SUB : '-';
 MUL : '*';
 DIV : '/';
 MOD : '%';
-ARROW : '->';
 
 ADD_ASSIGN : '+=';
 SUB_ASSIGN : '-=';
