@@ -1,0 +1,5 @@
+.idea/*
+grammar/.idea/*
+grammar/gen/*
+*.pyc
+*.iml
