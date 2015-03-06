@@ -1,7 +1,15 @@
 grammar LLang;
 
 programm
-    : (variableDeclarationStatement | functionDeclaration)*
+    : (variableDeclarationStatement | functionDeclaration | recordDeclaration)*
+    ;
+
+recordDeclaration
+    : RECORD identifier recordBody
+    ;
+
+recordBody
+    : '{' variableDeclarationStatement* '}'
     ;
 
 functionDeclaration
@@ -9,11 +17,16 @@ functionDeclaration
     ;
 
 functionSignature
-    : Identifier '(' functionParameterList? ')'
+    : identifier '(' functionParameterList? ')' ':' functionReturnType
+    ;
+
+functionReturnType
+    : type
+    | voidType
     ;
 
 functionBody
-    : block
+    : '{' statement* returnStatement? '}'
     ;
 
 functionParameterList
@@ -21,7 +34,7 @@ functionParameterList
     ;
 
 functionParameter
-    : Identifier;
+    : identifier ':' type;
 
 variableDeclarationStatement
     : variableDeclaration ';'
@@ -33,36 +46,61 @@ variableDeclaration
 
 variableInitializer
     : expression
-    | arrayInitializer
+    | cortegeInitializer
     ;
 
-arrayInitializer
-    : '[' variableInitializerList? ']'
+recordInitializer
+    : identifier '(' recordFieldInitializerList? ')'
     ;
 
-variableInitializerList
+recordFieldInitializerList
+    : (recordFieldInitializer ',')* recordFieldInitializer
+    ;
+
+recordFieldInitializer
+    : identifier '=' expression
+    ;
+
+cortegeInitializer
+    : '[' variableInitializerNonEmptyList? ']'
+    ;
+
+variableInitializerNonEmptyList
     : variableInitializer (',' variableInitializer)*
+    ;
+
+passStatement
+    : PASS ';'
     ;
 
 type
     : primitiveType
-    | arrayType
+    | cortegeType
+    | recordType
     ;
 
 primitiveType
-    : BOOL
-    | INT
-    | STR
+    : intType
+    | strType
+    | boolType
     ;
 
-arrayType
-    : primitiveType dims
+recordType
+    : Identifier
     ;
 
-dims
-    : ('[' ']')+
+intType : INT;
+strType : STR;
+boolType : BOOL;
+voidType : VOID;
+
+cortegeType
+    : '[' typeNonEmptyList ']'
     ;
 
+typeNonEmptyList
+    : type (',' type)*
+    ;
 
 block
     : '{' statement* '}'
@@ -70,10 +108,16 @@ block
 
 statement
     : block
+    | variableDeclarationStatement
     | assignmentStatement
     | ifStatement
     | functionInvocationStatement
     | forStatement
+    | passStatement
+    ;
+
+returnStatement
+    : RETURN expression? ';'
     ;
 
 forStatement
@@ -82,6 +126,7 @@ forStatement
 
 forInit
     : assignment
+    | variableDeclaration
     ;
 
 forUpdate
@@ -98,7 +143,11 @@ functionInvocationStatement
     ;
 
 functionInvocation
-    : Identifier '(' functionParameterList? ')'
+    : identifier '(' argumentList? ')'
+    ;
+
+argumentList
+    : expression (',' expression)*
     ;
 
 expression
@@ -113,7 +162,10 @@ expression
     | expression '||' expression
     | functionInvocation
     | literal
-    | Identifier
+    | identifier
+    | cortegeInitializer
+    | cortegeAccess
+    | recordFieldAccess
     | '(' expression ')'
     ;
 
@@ -126,19 +178,32 @@ assignment
 	;
 
 leftHandSide
-	:	expressionName
-//	|	arrayAccess
+	: expressionName
+	| cortegeAccess
+	| recordFieldAccess
 	;
 
+cortegeAccess
+    : identifier '[' expression ']'
+    ;
+
+recordFieldAccess
+    : identifier '.' leftHandSide
+    ;
+
 expressionName
-    : Identifier
+    : identifier
     ;
 
 literal
-    : IntegerLiteral
-    | StringLiteral
-    | BooleanLiteral
+    : intLiteral
+    | strLiteral
+    | boolLiteral
     ;
+
+intLiteral : IntegerLiteral;
+strLiteral : StringLiteral;
+boolLiteral : BooleanLiteral;
 
 assignmentOperator
 	:	'='
@@ -155,19 +220,16 @@ assignmentOperator
 BOOL : 'Bool';
 INT : 'Int';
 STR : 'Str';
-VOID : 'Bool';
+VOID : 'Void';
 
-CLASS : 'class';
-DOUBLE : 'double';
+RECORD : 'record';
 ELSE : 'else';
 FOR : 'for';
 IF : 'if';
 ELIF : 'elif';
-NEW : 'new';
 RETURN : 'return';
-THIS : 'this';
-WHILE : 'while';
 FUN : 'fun';
+PASS : 'pass';
 
 LPAREN : '(';
 RPAREN : ')';
@@ -205,6 +267,8 @@ MOD_ASSIGN : '%=';
 
 
 // identifiers
+
+identifier : Identifier;
 
 Identifier
     : [a-zA-Z_] [a-zA-Z0-9_]*
