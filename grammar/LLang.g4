@@ -21,7 +21,7 @@ functionSignature
     ;
 
 functionReturnType
-    : type
+    : exprType
     | voidType
     ;
 
@@ -34,14 +34,14 @@ functionParameterList
     ;
 
 functionParameter
-    : identifier ':' type;
+    : identifier ':' exprType;
 
 variableDeclarationStatement
     : variableDeclaration ';'
     ;
 
 variableDeclaration
-    : type Identifier ('=' variableInitializer)?
+    : exprType Identifier ('=' variableInitializer)?
     ;
 
 variableInitializer
@@ -73,7 +73,7 @@ passStatement
     : PASS ';'
     ;
 
-type
+exprType
     : primitiveType
     | cortegeType
     | recordType
@@ -99,7 +99,7 @@ cortegeType
     ;
 
 typeNonEmptyList
-    : type (',' type)*
+    : exprType (',' exprType)*
     ;
 
 block
@@ -113,11 +113,18 @@ statement
     | ifStatement
     | functionInvocationStatement
     | forStatement
+    | whileStatement
     | passStatement
+    | readlnStatement
+    | writelnStatement
     ;
 
 returnStatement
     : RETURN expression? ';'
+    ;
+
+whileStatement
+    : WHILE '(' expression ')' block
     ;
 
 forStatement
@@ -135,7 +142,23 @@ forUpdate
     ;
 
 ifStatement
-    : IF '(' expression ')' (ELIF block)* (ELSE block)?
+    : IF '(' expression ')' block (ELIF '(' expression ')' block)* (ELSE block)?
+    ;
+
+writelnStatement
+    : writelnCall ';'
+    ;
+
+writelnCall
+    : WRITELN '(' argumentList ')'
+    ;
+
+readlnStatement
+    : readlnCall ';'
+    ;
+
+readlnCall
+    : READLN '(' leftHandSide (',' leftHandSide)* ')'
     ;
 
 functionInvocationStatement
@@ -162,10 +185,9 @@ expression
     | expression '||' expression
     | functionInvocation
     | literal
-    | identifier
     | cortegeInitializer
-    | cortegeAccess
-    | recordFieldAccess
+    | recordInitializer
+    | leftHandSide
     | '(' expression ')'
     ;
 
@@ -178,7 +200,7 @@ assignment
 	;
 
 leftHandSide
-	: expressionName
+	: identifier
 	| cortegeAccess
 	| recordFieldAccess
 	;
@@ -189,10 +211,6 @@ cortegeAccess
 
 recordFieldAccess
     : identifier '.' leftHandSide
-    ;
-
-expressionName
-    : identifier
     ;
 
 literal
@@ -223,8 +241,11 @@ STR : 'Str';
 VOID : 'Void';
 
 RECORD : 'record';
+WRITELN : 'writeln';
+READLN : 'readln';
 ELSE : 'else';
 FOR : 'for';
+WHILE : 'while';
 IF : 'if';
 ELIF : 'elif';
 RETURN : 'return';
