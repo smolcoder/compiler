@@ -26,7 +26,7 @@ record Address {
 }
 
 // empty operator
-fun doNothing():Void {
+fun doNothing():None {
     pass;
 }
 

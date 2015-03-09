@@ -92,7 +92,7 @@ recordType
 intType : INT;
 strType : STR;
 boolType : BOOL;
-voidType : VOID;
+voidType : NONE;
 
 cortegeType
     : '[' typeNonEmptyList ']'
@@ -238,7 +238,7 @@ assignmentOperator
 BOOL : 'Bool';
 INT : 'Int';
 STR : 'Str';
-VOID : 'Void';
+NONE : 'None';
 
 RECORD : 'record';
 WRITELN : 'writeln';
