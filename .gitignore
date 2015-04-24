@@ -1,5 +1,6 @@
 .idea/*
 grammar/.idea/*
-grammar/gen/*
 *.pyc
+grammar/Java8.g4
+grammar/py.g4
 *.iml

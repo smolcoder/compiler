@@ -1,6 +1,6 @@
 grammar LLang;
 
-programm
+programme
     : (variableDeclarationStatement | functionDeclaration | recordDeclaration)*
     ;
 
@@ -30,7 +30,7 @@ functionBody
     ;
 
 functionParameterList
-    : (functionParameter ',')* functionParameter
+    : (functionParameter COMMA)* functionParameter
     ;
 
 functionParameter
@@ -41,7 +41,7 @@ variableDeclarationStatement
     ;
 
 variableDeclaration
-    : exprType Identifier ('=' variableInitializer)?
+    : exprType identifier ('=' variableInitializer)?
     ;
 
 variableInitializer
@@ -54,7 +54,7 @@ recordInitializer
     ;
 
 recordFieldInitializerList
-    : (recordFieldInitializer ',')* recordFieldInitializer
+    : (recordFieldInitializer COMMA)* recordFieldInitializer
     ;
 
 recordFieldInitializer
@@ -66,7 +66,7 @@ cortegeInitializer
     ;
 
 variableInitializerNonEmptyList
-    : variableInitializer (',' variableInitializer)*
+    : variableInitializer (COMMA variableInitializer)*
     ;
 
 passStatement
@@ -99,7 +99,7 @@ cortegeType
     ;
 
 typeNonEmptyList
-    : exprType (',' exprType)*
+    : exprType (COMMA exprType)*
     ;
 
 block
@@ -158,7 +158,7 @@ readlnStatement
     ;
 
 readlnCall
-    : READLN '(' leftHandSide (',' leftHandSide)* ')'
+    : READLN '(' leftHandSide (COMMA leftHandSide)* ')'
     ;
 
 functionInvocationStatement
@@ -170,19 +170,17 @@ functionInvocation
     ;
 
 argumentList
-    : expression (',' expression)*
+    : expression (COMMA expression)*
     ;
 
 expression
     : assignment
-    | '-' expression
-    | '!' expression
-    | expression ('*' | '/' | '%') expression
-    | expression ('-' | '+') expression
-    | expression ('>' | '>=' | '<=' | '<') expression
-    | expression ('==' | '!=') expression
-    | expression '&&' expression
-    | expression '||' expression
+    | unaryOperator expression
+    | expression mulDivModOperator expression
+    | expression addSubOperator expression
+    | expression compareOperator expression
+    | expression equalOrNotOperator expression
+    | expression boolOperator expression
     | functionInvocation
     | literal
     | cortegeInitializer
@@ -222,6 +220,39 @@ literal
 intLiteral : IntegerLiteral;
 strLiteral : StringLiteral;
 boolLiteral : BooleanLiteral;
+
+unaryOperator
+    : '-'
+    | '!'
+    ;
+
+mulDivModOperator
+    : '*'
+    | '/'
+    | '%'
+    ;
+
+addSubOperator
+    : '+'
+    | '-'
+    ;
+
+compareOperator
+    : '>'
+    | '>='
+    | '<'
+    | '<='
+    ;
+
+equalOrNotOperator
+    : '=='
+    | '!='
+    ;
+
+boolOperator
+    : '&&'
+    | '||'
+    ;
 
 assignmentOperator
 	:	'='
