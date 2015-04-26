@@ -82,5 +82,5 @@ fun foo(a:Int, b:Int):Int {
         Bool f = (result == 2) != !(a == -1) && (c >= 2);
         writeln(f);
     }
-    return result;
+    return 1 + result * 3;
 }

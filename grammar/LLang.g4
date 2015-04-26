@@ -185,7 +185,9 @@ expression
     | literal
     | cortegeInitializer
     | recordInitializer
-    | leftHandSide
+    | identifier
+    | cortegeAccess
+    | recordFieldAccess
     | '(' expression ')'
     ;
 
