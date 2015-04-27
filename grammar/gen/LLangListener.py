@@ -13,6 +13,15 @@ class LLangListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by LLangParser#justBlock.
+    def enterJustBlock(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#justBlock.
+    def exitJustBlock(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by LLangParser#recordDeclaration.
     def enterRecordDeclaration(self, ctx):
         pass
@@ -184,12 +193,12 @@ class LLangListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by LLangParser#recordType.
-    def enterRecordType(self, ctx):
+    # Enter a parse tree produced by LLangParser#recordId.
+    def enterRecordId(self, ctx):
         pass
 
-    # Exit a parse tree produced by LLangParser#recordType.
-    def exitRecordType(self, ctx):
+    # Exit a parse tree produced by LLangParser#recordId.
+    def exitRecordId(self, ctx):
         pass
 
 

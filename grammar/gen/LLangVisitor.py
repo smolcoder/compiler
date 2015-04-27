@@ -10,6 +10,11 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by LLangParser#justBlock.
+    def visitJustBlock(self, ctx):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by LLangParser#recordDeclaration.
     def visitRecordDeclaration(self, ctx):
         return self.visitChildren(ctx)
@@ -105,8 +110,8 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by LLangParser#recordType.
-    def visitRecordType(self, ctx):
+    # Visit a parse tree produced by LLangParser#recordId.
+    def visitRecordId(self, ctx):
         return self.visitChildren(ctx)
 
 

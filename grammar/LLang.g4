@@ -1,11 +1,15 @@
 grammar LLang;
 
 programme
-    : (variableDeclarationStatement | functionDeclaration | recordDeclaration | block)*
+    : (variableDeclarationStatement | functionDeclaration | recordDeclaration | justBlock)*
+    ;
+
+justBlock
+    : block
     ;
 
 recordDeclaration
-    : RECORD identifier recordBody
+    : RECORD recordId recordBody
     ;
 
 recordBody
@@ -76,7 +80,7 @@ passStatement
 exprType
     : primitiveType
     | cortegeType
-    | recordType
+    | recordId
     ;
 
 primitiveType
@@ -85,7 +89,7 @@ primitiveType
     | boolType
     ;
 
-recordType
+recordId
     : Identifier
     ;
 
@@ -107,7 +111,7 @@ block
     ;
 
 statement
-    : block
+    : justBlock
     | variableDeclarationStatement
     | assignmentStatement
     | ifStatement
@@ -146,7 +150,7 @@ forUpdate
     ;
 
 ifStatement
-    : IF '(' expression ')' block (ELIF '(' expression ')' block)* (ELSE block)?
+    : IF '(' expression ')' justBlock (ELIF '(' expression ')' justBlock)* (ELSE justBlock)?
     ;
 
 writelnStatement

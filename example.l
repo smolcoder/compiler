@@ -9,7 +9,9 @@ Bool bool = false;
 
 // Corteges
 [Int, Int] point = [2, 3];
-[Int, Bool, Str, [Int, Bool]] multiTypeCortege;
+[Int, Bool, Str,
+        [Int,
+                Bool], Person] multiTypeCortege;
 
 
 // Records
@@ -19,6 +21,8 @@ record Person {
     Address address;
     [Int, Int, Str] passportInfo;
 }
+
+Person person;
 
 record Address {
     Int house;
@@ -65,7 +69,7 @@ fun getPerson():Person {
 }
 
 // Cortege example
-fun getPassportInfo():[Int, Int, Str] {
+fun getPassportInfo(asdf: [Int, [Str, Bool]]):[Int, Int, Str] {
     // initialization
     [Int, Int, Str] result = [1234, 567890, "UFMS"];
     // access
@@ -94,4 +98,7 @@ fun foo(a:Int, b:Int):Int {
         writeln(f);
     }
     return 1 + result * 3;
+}
+{
+    for(Int i = 1; i < 10; i += 1) {}
 }
