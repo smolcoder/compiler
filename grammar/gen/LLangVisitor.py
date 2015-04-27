@@ -155,6 +155,11 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by LLangParser#returnExpr.
+    def visitReturnExpr(self, ctx):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by LLangParser#whileStatement.
     def visitWhileStatement(self, ctx):
         return self.visitChildren(ctx)

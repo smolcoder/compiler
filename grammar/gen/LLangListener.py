@@ -274,6 +274,15 @@ class LLangListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by LLangParser#returnExpr.
+    def enterReturnExpr(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#returnExpr.
+    def exitReturnExpr(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by LLangParser#whileStatement.
     def enterWhileStatement(self, ctx):
         pass

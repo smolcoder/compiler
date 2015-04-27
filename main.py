@@ -1,5 +1,5 @@
 from antlr4 import FileStream, CommonTokenStream
-from ast import buildAST
+from ast import buildAST, pprintAST
 from grammar.gen.LLangLexer import LLangLexer
 from grammar.gen.LLangParser import LLangParser
 
@@ -10,3 +10,4 @@ stream = CommonTokenStream(lexer)
 parser = LLangParser(stream)
 tree = parser.programme()
 ast = buildAST(tree)
+pprintAST(ast)

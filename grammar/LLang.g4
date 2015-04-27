@@ -1,7 +1,7 @@
 grammar LLang;
 
 programme
-    : (variableDeclarationStatement | functionDeclaration | recordDeclaration)*
+    : (variableDeclarationStatement | functionDeclaration | recordDeclaration | block)*
     ;
 
 recordDeclaration
@@ -30,7 +30,7 @@ functionBody
     ;
 
 functionParameterList
-    : (functionParameter COMMA)* functionParameter
+    : (functionParameter ',')* functionParameter
     ;
 
 functionParameter
@@ -54,7 +54,7 @@ recordInitializer
     ;
 
 recordFieldInitializerList
-    : (recordFieldInitializer COMMA)* recordFieldInitializer
+    : (recordFieldInitializer ',')* recordFieldInitializer
     ;
 
 recordFieldInitializer
@@ -66,7 +66,7 @@ cortegeInitializer
     ;
 
 variableInitializerNonEmptyList
-    : variableInitializer (COMMA variableInitializer)*
+    : variableInitializer (',' variableInitializer)*
     ;
 
 passStatement
@@ -99,7 +99,7 @@ cortegeType
     ;
 
 typeNonEmptyList
-    : exprType (COMMA exprType)*
+    : exprType (',' exprType)*
     ;
 
 block
@@ -120,7 +120,11 @@ statement
     ;
 
 returnStatement
-    : RETURN expression? ';'
+    : returnExpr ';'
+    ;
+
+returnExpr
+    : RETURN expression?
     ;
 
 whileStatement
@@ -158,7 +162,7 @@ readlnStatement
     ;
 
 readlnCall
-    : READLN '(' leftHandSide (COMMA leftHandSide)* ')'
+    : READLN '(' leftHandSide (',' leftHandSide)* ')'
     ;
 
 functionInvocationStatement
@@ -170,7 +174,7 @@ functionInvocation
     ;
 
 argumentList
-    : expression (COMMA expression)*
+    : expression (',' expression)*
     ;
 
 expression
@@ -265,14 +269,13 @@ assignmentOperator
 	|	'-='
 	;
 
-// keywords
-
 // Types
 BOOL : 'Bool';
 INT : 'Int';
 STR : 'Str';
 NONE : 'None';
 
+// keywords
 RECORD : 'record';
 WRITELN : 'writeln';
 READLN : 'readln';
@@ -284,41 +287,6 @@ ELIF : 'elif';
 RETURN : 'return';
 FUN : 'fun';
 PASS : 'pass';
-
-LPAREN : '(';
-RPAREN : ')';
-LBRACE : '{';
-RBRACE : '}';
-LBRACK : '[';
-RBRACK : ']';
-SEMI : ';';
-COMMA : ',';
-DOT : '.';
-
-ASSIGN : '=';
-GT : '>';
-LT : '<';
-BANG : '!';
-COLON : ':';
-EQUAL : '==';
-LE : '<=';
-GE : '>=';
-NOTEQUAL : '!=';
-AND : '&&';
-OR : '||';
-ADD : '+';
-SUB : '-';
-MUL : '*';
-DIV : '/';
-MOD : '%';
-
-ADD_ASSIGN : '+=';
-SUB_ASSIGN : '-=';
-MUL_ASSIGN : '*=';
-DIV_ASSIGN : '/=';
-AND_ASSIGN : '&=';
-MOD_ASSIGN : '%=';
-
 
 // identifiers
 

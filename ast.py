@@ -2,11 +2,15 @@ from grammar.gen.LLangListener import LLangListener
 from antlr4 import *
 
 
-class TypedASTNode:
-    _type = None
+class PrimitiveType:
+    INT = 'Int'
+    STR = 'Str'
+    BOOL = 'Bool'
 
+
+class TypedASTNode:
     def getType(self):
-        return self._type
+        pass
 
 
 class ASTNode:
@@ -19,11 +23,17 @@ class ASTNode:
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return str(self)
+
 
 class TerminalASTNode(ASTNode):
     def __init__(self, name, value=None):
         ASTNode.__init__(self, name)
         self.value = value
+
+    def getDeepest(self):
+        return self
 
     def __str__(self):
         return '{}[{}]'.format(self.name, self.value) if self.value is not None else self.name
@@ -33,6 +43,9 @@ class NonTerminalASTNode(ASTNode):
     def __init__(self, name):
         ASTNode.__init__(self, name)
         self._children = []
+
+    def getChildren(self):
+        return self._children
 
     def addChild(self, ast):
         ast.parent = self
@@ -47,11 +60,11 @@ class NonTerminalASTNode(ASTNode):
     def getChild(self, index):
         return self._children[index]
 
-    def getDeepestTerminal(self):
+    def getDeepest(self):
         if len(self._children) != 1:
             raise Exception('Node {} has two or more children.'.format(self))
         first = self.getFirstChild()
-        return first if isinstance(first, TerminalASTNode) else first.getDeepestTerminal()
+        return first if isinstance(first, TerminalASTNode) else first.getDeepest()
 
 
 class ErrorASTNode(TerminalASTNode):
@@ -60,38 +73,68 @@ class ErrorASTNode(TerminalASTNode):
         self.errorInfo = errorInfo
 
 
-class StringASTNode(TerminalASTNode, TypedASTNode):
-    _type = 'string'
-
-    def __init__(self, string):
-        TerminalASTNode.__init__(self, 'String')
-        self.value = string
-
-
-class IntASTNode(TerminalASTNode, TypedASTNode):
-    _type = 'integer'
+class LiteralASTNode(TerminalASTNode, TypedASTNode):
+    _type = None
 
     def __init__(self, value):
-        TerminalASTNode.__init__(self, 'Integer')
-        self.value = value
+        TerminalASTNode.__init__(self, self._type, value)
+
+    def getType(self):
+        return self._type
 
 
-class BoolASTNode(TerminalASTNode, TypedASTNode):
-    _type = 'boolean'
+class StrLiteralASTNode(LiteralASTNode):
+    _type = PrimitiveType.STR
 
-    def __init__(self, value):
-        TerminalASTNode.__init__(self, 'Boolean')
-        self.value = value
 
-# class UnaryOperation(NonTerminalASTNode):
-#     def __init__(self, name, operator, subject):
-#         NonTerminalASTNode.__init__(self, name)
-#         self.operator = operator
-#         self.operand = subject
+class IntLiteralASTNode(LiteralASTNode):
+    _type = PrimitiveType.INT
+
+
+class BoolLiteralASTNode(LiteralASTNode):
+    _type = PrimitiveType.BOOL
+
+
+class IdASTNode(TerminalASTNode):
+    def __init__(self, identifier):
+        TerminalASTNode.__init__(self, 'Identifier', identifier)
+
+
+class PrimitiveTypeASTNode(TerminalASTNode):
+    def __init__(self, _type):
+        TerminalASTNode.__init__(self, 'PrimitiveType', _type)
+
+
+class OperatorASTNode(TerminalASTNode):
+    pass
+
+
+def isTerminal(ast):
+    return isinstance(ast, TerminalASTNode)
 
 
 SKIP_SYMBOLS = ['[', ']', '{', '}', '(', ')', ';', ',', '.', ':',
-                'fun', 'return', 'readln', 'writeln', '=']
+                'fun', 'return', 'readln', 'writeln']
+
+REMOVE_SEMICOLON_AFTER = [
+    'variableDeclarationStatement',
+    'passStatement',
+    'returnStatement',
+    'writelnStatement',
+    'readlnStatement',
+    'functionInvocationStatement',
+    'assignmentStatement',
+]
+
+OPERATORS = [
+    'unaryOperator',
+    'mulDivModOperator',
+    'addSubOperator',
+    'compareOperator',
+    'equalOrNotOperator',
+    'boolOperator',
+    'assignmentOperator'
+]
 
 
 def get_rule_name(ctx):
@@ -105,17 +148,26 @@ class ASTBuildListener(LLangListener):
         ctx.ast = NonTerminalASTNode(get_rule_name(ctx))
 
     def exitEveryRule(self, ctx):
+        ast = ctx.ast if ctx.ast.name not in REMOVE_SEMICOLON_AFTER else ctx.ast.getFirstChild()
+        if ast.name in OPERATORS:
+            ast = OperatorASTNode(ast.name, ast.getFirstChild().value)
         if ctx.parentCtx:
-            ctx.parentCtx.ast.addChild(ctx.ast)
+            ctx.parentCtx.ast.addChild(ast)
 
     def exitIntLiteral(self, ctx):
-        ctx.ast = IntASTNode(ctx.ast.getDeepestTerminal().name)
+        ctx.ast = IntLiteralASTNode(ctx.ast.getDeepest().value)
 
     def exitStrLiteral(self, ctx):
-        ctx.ast = StringASTNode(ctx.ast.getDeepestTerminal().name)
+        ctx.ast = StrLiteralASTNode(ctx.ast.getDeepest().value)
 
     def exitBoolLiteral(self, ctx):
-        ctx.ast = BoolASTNode(ctx.ast.getDeepestTerminal().name)
+        ctx.ast = BoolLiteralASTNode(ctx.ast.getDeepest().value)
+
+    def exitPrimitiveType(self, ctx):
+        ctx.ast = PrimitiveTypeASTNode(ctx.ast.getDeepest().value)
+
+    def exitIdentifier(self, ctx):
+        ctx.ast = IdASTNode(ctx.ast.getDeepest().value)
 
     def visitTerminal(self, node):
         text = node.symbol.text
@@ -123,7 +175,7 @@ class ASTBuildListener(LLangListener):
             return
         if node.parentCtx.ast.name == 'strLiteral':
             text = text[1:len(text) - 1]
-        ast = TerminalASTNode(text)
+        ast = TerminalASTNode('TerminalNode', text)
         node.parentCtx.ast.addChild(ast)
 
     def visitErrorNode(self, node):
@@ -145,3 +197,13 @@ def buildAST(root):
     walker = ParseTreeWalker()
     walker.walk(listener, root)
     return root.ast
+
+INDENT = '| '
+
+
+def pprintAST(ast, indents=0):
+    print indents * INDENT + str(ast)
+    if isTerminal(ast):
+        return
+    for c in ast.getChildren():
+        pprintAST(c, indents + 1)

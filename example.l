@@ -25,6 +25,14 @@ record Address {
     Str street;
 }
 
+{
+    // Empty block
+}
+
+{
+    Int global_int;
+}
+
 // empty operator
 fun doNothing():None {
     pass;
