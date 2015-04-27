@@ -1,8 +1,7 @@
 from antlr4 import FileStream, CommonTokenStream
-from ast import buildAST, pprintAST
+from ast import buildAST, ASTWalker, pprintAST
 from grammar.gen.LLangLexer import LLangLexer
 from grammar.gen.LLangParser import LLangParser
-
 
 input = FileStream('example.l')
 lexer = LLangLexer(input)

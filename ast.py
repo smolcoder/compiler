@@ -1,5 +1,6 @@
 from grammar.gen.LLangListener import LLangListener
 from antlr4 import *
+from utils import capitalizeFirst, getRuleName
 
 
 class PrimitiveType:
@@ -109,6 +110,50 @@ class OperatorASTNode(TerminalASTNode):
     pass
 
 
+class ASTWalker:
+    def buildEnterName(self, s):
+        return 'enter' + capitalizeFirst(s)
+
+    def buildExitName(self, s):
+        return 'exit' + capitalizeFirst(s)
+
+    def buildVisitName(self, s):
+        return 'visit' + capitalizeFirst(s)
+
+    def walk(self, listener, ast):
+        if isinstance(ast, TerminalASTNode):
+            name = self.buildVisitName(ast.name)
+            if hasattr(listener, name):
+                getattr(listener, name)(ast)
+            elif hasattr(listener, 'visitTerminal'):
+                getattr(listener, 'visitTerminal')(ast)
+        self.enterNode(listener, ast)
+        if isinstance(ast, NonTerminalASTNode):
+            for c in ast.getChildren():
+                self.walk(listener, c)
+        self.exitNode(listener, ast)
+
+    def enterNode(self, listener, ast):
+        if hasattr(listener, 'enterEvery'):
+            getattr(listener, 'enterEvery')(ast)
+        cls = self.buildEnterName(ast.__class__.__name__)
+        name = self.buildEnterName(ast.name)
+        if hasattr(listener, name):
+            getattr(listener, name)(ast)
+        elif hasattr(listener, cls):
+            getattr(listener, cls)(ast)
+
+    def exitNode(self, listener, ast):
+        cls = self.buildExitName(ast.__class__.__name__)
+        name = self.buildExitName(ast.name)
+        if hasattr(listener, name):
+            getattr(listener, name)(ast)
+        elif hasattr(listener, cls):
+            getattr(listener, cls)(ast)
+        if hasattr(listener, 'exitEvery'):
+            getattr(listener, 'exitEvery')(ast)
+
+
 def isTerminal(ast):
     return isinstance(ast, TerminalASTNode)
 
@@ -137,20 +182,16 @@ OPERATORS = [
 ]
 
 
-def get_rule_name(ctx):
-    return ctx.parser.ruleNames[ctx.getRuleIndex()]
-
-
 # Builds AST node for each state context,
 # binds it to the context (via making ast field)
 class ASTBuildListener(LLangListener):
     def enterEveryRule(self, ctx):
-        ctx.ast = NonTerminalASTNode(get_rule_name(ctx))
+        ctx.ast = NonTerminalASTNode(getRuleName(ctx))
 
     def exitEveryRule(self, ctx):
         ast = ctx.ast if ctx.ast.name not in REMOVE_SEMICOLON_AFTER else ctx.ast.getFirstChild()
         if ast.name in OPERATORS:
-            ast = OperatorASTNode(ast.name, ast.getFirstChild().value)
+            ast = OperatorASTNode(capitalizeFirst(ast.name), ast.getFirstChild().value)
         if ctx.parentCtx:
             ctx.parentCtx.ast.addChild(ast)
 
@@ -197,6 +238,7 @@ def buildAST(root):
     walker = ParseTreeWalker()
     walker.walk(listener, root)
     return root.ast
+
 
 INDENT = '| '
 

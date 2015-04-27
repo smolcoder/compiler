@@ -31,6 +31,9 @@ record Address {
 
 {
     Int global_int;
+    {
+        Str nested = "variable in the nested block";
+    }
 }
 
 // empty operator
