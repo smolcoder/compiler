@@ -1,3 +1,4 @@
+from antlr4.error.ErrorListener import ErrorListener
 from grammar.gen.LLangListener import LLangListener
 from utils import capitalizeFirst, getRuleName, SourceInfo
 
@@ -74,7 +75,7 @@ class NonTerminalASTNode(ASTNode):
 
     def getDeepest(self):
         if len(self._children) != 1:
-            raise Exception('Node {} has two or more children.'.format(self))
+            raise Exception('Node {} has zero, two or more children.'.format(self))
         first = self.getFirstChild()
         return first if isinstance(first, TerminalASTNode) else first.getDeepest()
 
@@ -104,12 +105,6 @@ class VariableDeclarationASTNode(NonTerminalASTNode):
         return self.getChild(1).value
 
     # todo getInitializer()?
-
-
-class ErrorASTNode(TerminalASTNode):
-    def __init__(self, errorInfo, source):
-        TerminalASTNode.__init__(self, 'Error', source, value=None)
-        self.errorInfo = errorInfo
 
 
 class LiteralASTNode(TerminalASTNode):
@@ -158,7 +153,6 @@ class OperatorASTNode(TerminalASTNode):
 class ProgrammeASTNode(NonTerminalASTNode):
     def __init__(self, source):
         NonTerminalASTNode.__init__(self, 'Programme', source)
-        self.errorNodes = []
         self.root = self
 
 
@@ -243,6 +237,8 @@ OPERATORS = [
 class ASTBuildListener(LLangListener):
     def enterEveryRule(self, ctx):
         ctx.ast = NonTerminalASTNode(getRuleName(ctx), source=getSource(ctx))
+        if ctx.parentCtx and hasattr(ctx.parentCtx, 'ast'):
+            ctx.ast.parent = ctx.parentCtx.ast
 
     def enterProgramme(self, ctx):
         # overwrite AST
@@ -294,6 +290,7 @@ class ASTBuildListener(LLangListener):
 
     def enterVariableDeclaration(self, ctx):
         ctx.ast = VariableDeclarationASTNode('variableDeclaration', getSource(ctx))
+        ctx.ast.parent = ctx.parentCtx.ast
 
     def visitTerminal(self, node):
         symbol = node.symbol
@@ -307,21 +304,6 @@ class ASTBuildListener(LLangListener):
         ast = TerminalASTNode('TerminalNode', source, text)
         node.parentCtx.ast.addChild(ast)
 
-    def visitErrorNode(self, node):
-        symbol = node.symbol
-        text = symbol.source[1].strdata
-        start = symbol.start
-        stop = symbol.stop
-        while start - 1 >= 0 and text[start - 1] != '\n':
-            start -= 1
-        while stop + 1 < len(text) and text[stop + 1] != '\n':
-            stop += 1
-
-        ast = ErrorASTNode(text[start:stop + 1], source=SourceInfo(firstPos=symbol.start, lastPos=symbol.stop,
-                                                                   line=symbol.line, column=symbol.column))
-        node.parentCtx.ast.addChild(ast)
-        node.parentCtx.ast.getRoot().errorNodes.append(ast)
-
 
 INDENT = '| '
 
@@ -332,3 +314,11 @@ def pprintAST(ast, indents=0):
         return
     for c in ast.getChildren():
         pprintAST(c, indents + 1)
+
+
+class SyntaxErrorListener(ErrorListener):
+    def __init__(self):
+        self.errors = []
+
+    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+        self.errors.append("Syntax error on line {}:{}: '{}'".format(line, column, offendingSymbol.text))

@@ -99,6 +99,3 @@ fun foo(a:Int, b:Int):Int {
     }
     return 1 + result * 3;
 }
-{
-    for(Int i = 1; i < 10; i += 1) {}
-}
