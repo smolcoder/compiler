@@ -1,5 +1,4 @@
 from grammar.gen.LLangListener import LLangListener
-from antlr4 import *
 from utils import capitalizeFirst, getRuleName, SourceInfo
 
 
@@ -11,6 +10,7 @@ class ASTNode:
         self.left = None
         self.right = None
         self.parent = None
+        self.root = None
         self.env = None
 
     def __str__(self):
@@ -23,6 +23,11 @@ class ASTNode:
         if self.env is not None:
             return self.env
         return self.parent.getEnv() if self.parent else None
+
+    def getRoot(self):
+        if not self.root:
+            self.root = self.parent.getRoot()
+        return self.root
 
 
 class TerminalASTNode(ASTNode):
@@ -153,6 +158,8 @@ class OperatorASTNode(TerminalASTNode):
 class ProgrammeASTNode(NonTerminalASTNode):
     def __init__(self, source):
         NonTerminalASTNode.__init__(self, 'Programme', source)
+        self.errorNodes = []
+        self.root = self
 
 
 class ASTWalker:
@@ -204,7 +211,7 @@ def isTerminal(ast):
 
 
 def getSource(ctx):
-    return SourceInfo(first_pos=ctx.start.start, last_pos=ctx.stop.stop, line=ctx.start.line, column=ctx.start.column)
+    return SourceInfo(firstPos=ctx.start.start, lastPos=ctx.stop.stop, line=ctx.start.line, column=ctx.start.column)
 
 SKIP_SYMBOLS = ['[', ']', '{', '}', '(', ')', ';', ',', '.', ':',
                 'fun', 'return', 'readln', 'writeln', 'record',
@@ -291,7 +298,7 @@ class ASTBuildListener(LLangListener):
     def visitTerminal(self, node):
         symbol = node.symbol
         text = symbol.text
-        source = SourceInfo(first_pos=symbol.start, last_pos=symbol.stop,
+        source = SourceInfo(firstPos=symbol.start, lastPos=symbol.stop,
                             line=symbol.line, column=symbol.column)
         if text in SKIP_SYMBOLS:
             return
@@ -310,16 +317,10 @@ class ASTBuildListener(LLangListener):
         while stop + 1 < len(text) and text[stop + 1] != '\n':
             stop += 1
 
-        ast = ErrorASTNode(text[start:stop + 1], source=SourceInfo(first_pos=symbol.start, last_pos=symbol.stop,
+        ast = ErrorASTNode(text[start:stop + 1], source=SourceInfo(firstPos=symbol.start, lastPos=symbol.stop,
                                                                    line=symbol.line, column=symbol.column))
         node.parentCtx.ast.addChild(ast)
-
-
-def buildAST(root):
-    listener = ASTBuildListener()
-    walker = ParseTreeWalker()
-    walker.walk(listener, root)
-    return root.ast
+        node.parentCtx.ast.getRoot().errorNodes.append(ast)
 
 
 INDENT = '| '

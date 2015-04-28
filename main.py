@@ -1,19 +1,7 @@
-from compiler.misc import Stack
-from antlr4 import FileStream, CommonTokenStream
-from ast import buildAST, ASTWalker, pprintAST
-from grammar.gen.LLangLexer import LLangLexer
-from grammar.gen.LLangParser import LLangParser
-from env import BuildEnvListener, buildEnv
+from compiler import Compiler
 
 
-def parse(filename):
-    lexer = LLangLexer(FileStream(filename))
-    stream = CommonTokenStream(lexer)
-    parser = LLangParser(stream)
-    return parser.programme()
-
-root = parse('example.l')
-ast = buildAST(root)
-ast = buildEnv(ast)
-
-pprintAST(ast)
+compiler = Compiler()
+result = compiler.compile('example.l')
+if result.errors:
+    result.printErrors()

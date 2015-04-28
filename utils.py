@@ -22,9 +22,9 @@ class Stack:
 
 
 class SourceInfo:
-    def __init__(self, first_pos, last_pos, line, column):
-        self.first_pos = first_pos
-        self.last_pos = last_pos
+    def __init__(self, firstPos, lastPos, line, column):
+        self.first_pos = firstPos
+        self.last_pos = lastPos
         self.line = line
         self.column = column
 
