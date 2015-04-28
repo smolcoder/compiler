@@ -1,12 +1,14 @@
 from antlr4 import CommonTokenStream, ParseTreeWalker
 from ast import ASTBuildListener, SyntaxErrorListener
+from env import buildEnv
 from grammar.gen.LLangLexer import LLangLexer
 from grammar.gen.LLangParser import LLangParser
 
 
 class CompilerResult:
-    def __init__(self, ast=None, bytecode=None, errors=None):
+    def __init__(self, ast=None, bytecode=None, errors=None, globalEnv=None):
         self.ast = ast
+        self.globalEnv = globalEnv
         self.bytecode = bytecode
         self.errors = errors
 
@@ -29,11 +31,7 @@ class Compiler:
     def buildAST(self, rootRule):
         listener = ASTBuildListener()
         walker = ParseTreeWalker()
-        walker.walk(listener, rootRule)
-        # if ast.errorNodes:
-        #     template = 'Error on line {}, column {}.'
-        #     for node in ast.errorNodes:
-        #         errors.append(template.format(node.source.line, node.source.column))
+        walker.walk(listener, rootRule)  # todo what errors?
         return rootRule.ast, []
 
     def compile(self, stream):
@@ -41,5 +39,12 @@ class Compiler:
         if parseErrors:
             return CompilerResult(errors=parseErrors)
 
-        ast, errors = self.buildAST(programmeRule)
-        return CompilerResult(ast=ast, errors=errors)
+        ast, astBuildErrors = self.buildAST(programmeRule)
+        if astBuildErrors:
+            return CompilerResult(ast=ast, errors=astBuildErrors)
+
+        globalEnv, envErrors = buildEnv(ast)
+        if envErrors:
+            return CompilerResult(ast=ast, globalEnv=globalEnv, errors=envErrors)
+
+        return CompilerResult(ast=ast, globalEnv=globalEnv)

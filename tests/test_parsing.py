@@ -1,22 +1,7 @@
-import unittest
-from antlr4.InputStream import InputStream
-from compiler import Compiler
+from tests import BaseTestCase
 
 
-class ParsingTestCase(unittest.TestCase):
-    compiler = Compiler()
-
-    def compile(self, code):
-        return self.compiler.compile(InputStream(code))
-
-    def assertHasError(self, code):
-        result = self.compile(code)
-        self.assertTrue(result.errors)
-
-    def assertHasNoError(self, code):
-        result = self.compile(code)
-        self.assertFalse(result.errors)
-
+class ParsingTestCase(BaseTestCase):
     def test_for_out_of_any_block(self):
         self.assertHasError('for(Int i = 0; i < 10; i += 1){}')
 
