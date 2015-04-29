@@ -1,0 +1,36 @@
+Int i;
+Str s;
+Bool t;
+
+
+{
+    Int i;
+}
+
+fun foo(i:Int):None {
+    Int i1;
+    Str s;
+}
+
+fun bar(i:Int):None {
+    Str s;
+}
+
+record Person {
+    Int p;
+}
+
+Person p = Person(p=3);
+
+{
+    Int i;
+    Int i1;
+    {
+        {
+            {
+                Str p;
+                Str p1;
+            }
+        }
+    }
+}

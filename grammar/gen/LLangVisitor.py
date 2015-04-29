@@ -65,11 +65,6 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by LLangParser#variableInitializer.
-    def visitVariableInitializer(self, ctx):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by LLangParser#recordInitializer.
     def visitRecordInitializer(self, ctx):
         return self.visitChildren(ctx)
@@ -90,8 +85,8 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by LLangParser#variableInitializerNonEmptyList.
-    def visitVariableInitializerNonEmptyList(self, ctx):
+    # Visit a parse tree produced by LLangParser#expressionList.
+    def visitExpressionList(self, ctx):
         return self.visitChildren(ctx)
 
 
@@ -140,8 +135,13 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by LLangParser#typeNonEmptyList.
-    def visitTypeNonEmptyList(self, ctx):
+    # Visit a parse tree produced by LLangParser#cortegeTypeUnit.
+    def visitCortegeTypeUnit(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by LLangParser#cortegeTypeNonEmptyList.
+    def visitCortegeTypeNonEmptyList(self, ctx):
         return self.visitChildren(ctx)
 
 

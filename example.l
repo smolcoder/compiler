@@ -4,6 +4,7 @@ Block comments are supported too.
 */
 
 Int global_int;
+Int global_int_init = 3;
 Str global_str_init = "initialized string";
 Bool bool = false;
 
@@ -11,7 +12,7 @@ Bool bool = false;
 [Int, Int] point = [2, 3];
 [Int, Bool, Str,
         [Int,
-                Bool], Person] multiTypeCortege;
+                Bool]] multiTypeCortege;
 
 
 // Records
@@ -65,6 +66,8 @@ fun getPerson():Person {
     Person p = Person(age=15, gender="male", address=Address(house=2, street="Lenin"), passportInfo = getPassportInfo());
     // access
     p.age = 13;
+    p.age.a = 14;
+    p.age.b[1] = 15;
     return p;
 }
 
@@ -98,4 +101,9 @@ fun foo(a:Int, b:Int):Int {
         writeln(f);
     }
     return 1 + result * 3;
+}
+
+{
+    a.b.c = 1;
+    a.b.c[1] = 2;
 }

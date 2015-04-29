@@ -10,7 +10,7 @@ class ASTNode:
         self.env = None
 
     def __str__(self):
-        return self.name
+        return self.name + str(self.source)
 
     def __repr__(self):
         return str(self)
@@ -18,12 +18,25 @@ class ASTNode:
     def getEnv(self):
         if self.env is not None:
             return self.env
+        return self.getHigherEnv()
+
+    def getHigherEnv(self):
         return self.parent.getEnv() if self.parent else None
 
     def getRoot(self):
         if not self.root:
             self.root = self.parent.getRoot()
         return self.root
+
+    def filterByName(self, name):
+        from ast import NameFilterListener  # it's not OK
+        from ast import ASTWalker
+
+        listener = NameFilterListener()
+        walker = ASTWalker()
+        array = []
+        walker.walk(listener, self, name, array)
+        return array
 
 
 class TerminalASTNode(ASTNode):
@@ -62,6 +75,14 @@ class NonTerminalASTNode(ASTNode):
     def getChild(self, index):
         return self._children[index]
 
+    def firstManyChildrenDesc(self):
+        if len(self._children) != 1:
+            return self
+        c = self.getFirstChild()
+        if isinstance(c, TerminalASTNode):
+            return c
+        return c.firstManyChildrenDesc()
+
     def getFirstChildByName(self, name):
         for c in self.getChildren():
             if c.name == name:
@@ -85,16 +106,16 @@ class FunctionSignatureASTNode(NonTerminalASTNode):
             return []
         params = []
         for c in paramsNode.getChildren():
-            params.append((c.getChild(0).value, c.getChild(1).type))
+            params.append((c.getChild(0).value, c.getChild(1).typeName))
         return params
 
     def getReturnType(self):
-        return self.getLastChild().getFirstChild().type
+        return self.getLastChild().getFirstChild().typeName
 
 
 class VariableDeclarationASTNode(NonTerminalASTNode):
     def getType(self):
-        return self.getFirstChild().type
+        return self.getFirstChild().typeName
 
     def getName(self):
         return self.getChild(1).value
@@ -108,15 +129,21 @@ class LiteralASTNode(TerminalASTNode):
 
 
 class StrLiteralASTNode(LiteralASTNode):
-    pass
+    def __init__(self, source, value):
+        LiteralASTNode.__init__(self, source, value)
+        self.type = 'Str'
 
 
 class IntLiteralASTNode(LiteralASTNode):
-    pass
+    def __init__(self, source, value):
+        LiteralASTNode.__init__(self, source, value)
+        self.type = 'Int'
 
 
 class BoolLiteralASTNode(LiteralASTNode):
-    pass
+    def __init__(self, source, value):
+        LiteralASTNode.__init__(self, source, value)
+        self.type = 'Bool'
 
 
 class IdASTNode(TerminalASTNode):
@@ -127,18 +154,13 @@ class IdASTNode(TerminalASTNode):
 class RecordIdASTNode(TerminalASTNode):
     def __init__(self, source, identifier):
         TerminalASTNode.__init__(self, 'RecordID', source, identifier)
-        self.type = identifier
+        self.typeName = identifier
 
 
 class PrimitiveTypeASTNode(TerminalASTNode):
     def __init__(self, source, value):
         TerminalASTNode.__init__(self, 'PrimitiveType', source, value)
-        self.type = value
-
-
-class CortegeTypeASTNode(NonTerminalASTNode):
-    def __init__(self, name, source):
-        NonTerminalASTNode.__init__(self, name, source)
+        self.typeName = value
 
 
 class OperatorASTNode(TerminalASTNode):

@@ -3,6 +3,7 @@ from ast import ASTBuildListener, SyntaxErrorListener
 from env import buildEnv
 from grammar.gen.LLangLexer import LLangLexer
 from grammar.gen.LLangParser import LLangParser
+from typechecker import TypeCheckListener, typeCheck
 
 
 class CompilerResult:
@@ -47,4 +48,11 @@ class Compiler:
         if envErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=envErrors)
 
+        typeErrors = self.typeCheck(ast, globalEnv)
+        if typeErrors:
+            return CompilerResult(ast=ast, globalEnv=globalEnv, errors=typeErrors)
+
         return CompilerResult(ast=ast, globalEnv=globalEnv)
+
+    def typeCheck(self, ast, env):
+        return typeCheck(ast, env)

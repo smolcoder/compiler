@@ -112,15 +112,6 @@ class LLangListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by LLangParser#variableInitializer.
-    def enterVariableInitializer(self, ctx):
-        pass
-
-    # Exit a parse tree produced by LLangParser#variableInitializer.
-    def exitVariableInitializer(self, ctx):
-        pass
-
-
     # Enter a parse tree produced by LLangParser#recordInitializer.
     def enterRecordInitializer(self, ctx):
         pass
@@ -157,12 +148,12 @@ class LLangListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by LLangParser#variableInitializerNonEmptyList.
-    def enterVariableInitializerNonEmptyList(self, ctx):
+    # Enter a parse tree produced by LLangParser#expressionList.
+    def enterExpressionList(self, ctx):
         pass
 
-    # Exit a parse tree produced by LLangParser#variableInitializerNonEmptyList.
-    def exitVariableInitializerNonEmptyList(self, ctx):
+    # Exit a parse tree produced by LLangParser#expressionList.
+    def exitExpressionList(self, ctx):
         pass
 
 
@@ -247,12 +238,21 @@ class LLangListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by LLangParser#typeNonEmptyList.
-    def enterTypeNonEmptyList(self, ctx):
+    # Enter a parse tree produced by LLangParser#cortegeTypeUnit.
+    def enterCortegeTypeUnit(self, ctx):
         pass
 
-    # Exit a parse tree produced by LLangParser#typeNonEmptyList.
-    def exitTypeNonEmptyList(self, ctx):
+    # Exit a parse tree produced by LLangParser#cortegeTypeUnit.
+    def exitCortegeTypeUnit(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by LLangParser#cortegeTypeNonEmptyList.
+    def enterCortegeTypeNonEmptyList(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#cortegeTypeNonEmptyList.
+    def exitCortegeTypeNonEmptyList(self, ctx):
         pass
 
 

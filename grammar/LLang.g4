@@ -45,12 +45,7 @@ variableDeclarationStatement
     ;
 
 variableDeclaration
-    : exprType identifier ('=' variableInitializer)?
-    ;
-
-variableInitializer
-    : expression
-    | cortegeInitializer
+    : exprType identifier ('=' expression)?
     ;
 
 recordInitializer
@@ -66,11 +61,11 @@ recordFieldInitializer
     ;
 
 cortegeInitializer
-    : '[' variableInitializerNonEmptyList? ']'
+    : '[' expressionList? ']'
     ;
 
-variableInitializerNonEmptyList
-    : variableInitializer (',' variableInitializer)*
+expressionList
+    : expression (',' expression)*
     ;
 
 passStatement
@@ -99,11 +94,16 @@ boolType : BOOL;
 voidType : NONE;
 
 cortegeType
-    : '[' typeNonEmptyList ']'
+    : '[' cortegeTypeNonEmptyList ']'
     ;
 
-typeNonEmptyList
-    : exprType (',' exprType)*
+cortegeTypeUnit
+    : primitiveType
+    | cortegeType
+    ;
+
+cortegeTypeNonEmptyList
+    : cortegeTypeUnit (',' cortegeTypeUnit)*
     ;
 
 block
@@ -182,8 +182,7 @@ argumentList
     ;
 
 expression
-    : assignment
-    | unaryOperator expression
+    : unaryOperator expression
     | expression mulDivModOperator expression
     | expression addSubOperator expression
     | expression compareOperator expression
@@ -209,12 +208,13 @@ assignment
 
 leftHandSide
 	: identifier
-	| cortegeAccess
 	| recordFieldAccess
+	| cortegeAccess
 	;
 
 cortegeAccess
-    : identifier '[' expression ']'
+    : identifier '.' cortegeAccess
+    | identifier '[' intLiteral ']'
     ;
 
 recordFieldAccess

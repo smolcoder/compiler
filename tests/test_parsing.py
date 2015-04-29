@@ -18,3 +18,14 @@ class ParsingTestCase(BaseTestCase):
         self.assertHasError('{for(Int i = 0; i < 10; i += 1) print(x);}')
         self.assertHasNoError('{for(Int i = 0; i < 10; i += 1) {print(x);}}')
 
+    def test_cortege_with_record(self):
+        self.assertHasNoError('[Int, Str, Bool, [Int, Str]] ok;')
+        self.assertHasError('[Int, Str, Bool, [Int, Str], SomeRecord] ok;')
+
+    def test_left_hand_side(self):
+        self.assertHasError('{a[1].b = 2;}')
+        self.assertHasError('{a.b[1].c = 2;}')
+        self.assertHasNoError('{a.b.c[1] = 2;}')
+
+    def test_none_type(self):
+        self.assertHasError('None none;')

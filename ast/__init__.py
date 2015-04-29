@@ -2,6 +2,7 @@ from errors import CompilerError
 from antlr4.error.ErrorListener import ErrorListener
 import sys
 from grammar.gen.LLangListener import LLangListener
+from grammar.gen.LLangParser import LLangParser
 from utils import SourceInfo, getRuleName, capitalizeFirst
 from nodes import *
 
@@ -12,6 +13,7 @@ def isTerminal(ast):
 
 def getSource(ctx):
     return SourceInfo(firstPos=ctx.start.start, lastPos=ctx.stop.stop, line=ctx.start.line, column=ctx.start.column)
+
 
 SKIP_SYMBOLS = ['[', ']', '{', '}', '(', ')', ';', ',', '.', ':',
                 'fun', 'return', 'readln', 'writeln', 'record',
@@ -25,7 +27,7 @@ REMOVE_SEMICOLON_AFTER = [
     'readlnStatement',
     'functionInvocationStatement',
     'assignmentStatement',
-    ]
+]
 
 OPERATORS = [
     'unaryOperator',
@@ -82,17 +84,20 @@ class ASTBuildListener(LLangListener):
         ctx.ast = RecordIdASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 
     def exitExprType(self, ctx):
-        ctx.ast.type = ctx.ast.getFirstChild().type
+        ctx.ast.typeName = ctx.ast.getFirstChild().typeName
 
-    def enterTypeNonEmptyList(self, ctx):
-        ctx.ast.type = []
+    def enterCortegeTypeNonEmptyList(self, ctx):
+        ctx.ast.typeName = []
 
     def exitCortegeType(self, ctx):
-        ctx.ast.type = ctx.ast.getFirstChild().type
+        ctx.ast.typeName = ctx.ast.getFirstChild().typeName
 
-    def exitTypeNonEmptyList(self, ctx):
+    def exitCortegeTypeUnit(self, ctx):
+        ctx.ast.typeName = ctx.ast.getFirstChild().typeName
+
+    def exitCortegeTypeNonEmptyList(self, ctx):
         for c in ctx.ast.getChildren():
-            ctx.ast.type.append(c.type)
+            ctx.ast.typeName.append(c.typeName)
 
     def enterVariableDeclaration(self, ctx):
         ctx.ast = VariableDeclarationASTNode('variableDeclaration', getSource(ctx))
@@ -184,3 +189,13 @@ class BaseASTListener:
 
     def exitProgramme(self, *args, **kwargs):
         pass
+
+
+class NameFilterListener(BaseASTListener):
+    def visitTerminal(self, ast, name, array, *args, **kwargs):
+        if ast.name == name:
+            array.append(ast)
+
+    def enterEvery(self, ast, name, array, *args, **kwargs):
+        if ast.name == name:
+            array.append(ast)

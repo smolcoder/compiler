@@ -29,7 +29,7 @@ class SourceInfo:
         self.column = column
 
     def __str__(self):
-        return '[{}..{},{},{}]'.format(self.first_pos, self.last_pos, self.line, self.column)
+        return '[{}:{}]'.format(self.line, self.column)
 
     def __repr__(self):
         return str(self)
