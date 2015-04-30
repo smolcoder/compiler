@@ -1,4 +1,4 @@
-from ast import BaseASTListener, ASTWalker
+from ast import BaseASTListener, ASTWalker, walkAST
 from env import GlobalEnv
 from errors import NameNotFoundError
 
@@ -20,6 +20,5 @@ class TypeCheckListener(BaseASTListener):
 
 def typeCheck(ast, env):
     listener = TypeCheckListener(env)
-    walker = ASTWalker()
-    walker.walk(listener, ast)
+    walkAST(listener, ast)
     return listener.errors

@@ -30,12 +30,11 @@ class ASTNode:
 
     def filterByName(self, name):
         from ast import NameFilterListener  # it's not OK
-        from ast import ASTWalker
+        from ast import walkAST
 
         listener = NameFilterListener()
-        walker = ASTWalker()
         array = []
-        walker.walk(listener, self, name, array)
+        walkAST(listener, self, name, array)
         return array
 
 

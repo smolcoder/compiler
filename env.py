@@ -1,6 +1,6 @@
-from ast import ASTWalker
+from ast import walkAST
 from ast import BaseASTListener
-from errors import CompilerError, NameAlreadyDefinedError
+from errors import NameAlreadyDefinedError
 from utils import Stack
 
 
@@ -130,7 +130,6 @@ class BuildEnvListener(BaseASTListener):
 
 
 def buildEnv(ast):
-    walker = ASTWalker()
     listener = BuildEnvListener()
-    walker.walk(listener, ast)
+    walkAST(listener, ast)
     return listener.globalEnv, listener.errors

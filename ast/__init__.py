@@ -199,3 +199,8 @@ class NameFilterListener(BaseASTListener):
     def enterEvery(self, ast, name, array, *args, **kwargs):
         if ast.name == name:
             array.append(ast)
+
+
+def walkAST(listener, ast, *args, **kwargs):
+    walker = ASTWalker()
+    walker.walk(listener, ast, *args, **kwargs)
