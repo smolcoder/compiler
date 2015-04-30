@@ -30,16 +30,6 @@ record Address {
     Str street;
 }
 
-{
-    // Empty block
-}
-
-{
-    Int global_int;
-    {
-        Str nested = "variable in the nested block";
-    }
-}
 
 // empty operator
 fun doNothing():None {
@@ -68,6 +58,15 @@ fun getPerson():Person {
     p.age = 13;
     p.age.a = 14;
     p.age.b[1] = 15;
+    {
+        {
+            // Empty block
+        }
+        Int global_int;
+        {
+            Str nested = "variable in the nested block";
+        }
+    }
     return p;
 }
 
@@ -102,6 +101,7 @@ fun foo(a:Int, b:Int):Int {
     }
     return 1 + result * 3;
 }
+
 
 {
     a.b.c = 1;

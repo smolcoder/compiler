@@ -29,3 +29,10 @@ class ParsingTestCase(BaseTestCase):
 
     def test_none_type(self):
         self.assertHasError('None none;')
+
+    def test_outer_block(self):
+        self.assertHasError('Int i; i = 3;')
+        self.assertHasNoError('Int i; {i = 3;}')
+        self.assertHasNoError('fun foo():None {}')
+        self.assertHasError('{}{}')
+        self.assertHasNoError('{{}{}{}}')

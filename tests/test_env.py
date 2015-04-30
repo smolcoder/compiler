@@ -48,7 +48,7 @@ class EnvTestCase(BaseTestCase):
         self.assertIn('i', env.variables)
         self.assertTrue(env.resolveVariable('s'))
         self.assertIn('t', env.variables)
-        self.assertIn('p', env.variables)
+        self.assertNotIn('p', env.variables)
         self.assertIn('Person', env.records)
         self.assertTrue(env.resolveRecord('Person'))
 
@@ -59,18 +59,33 @@ class EnvTestCase(BaseTestCase):
         ast = self.res.ast
         varDeclarations = ast.filterByName('variableDeclaration')
 
-        self.assertNotEqual(varDeclarations[-1].getEnv().resolveVariable('p'), ast.env.resolveVariable('p'))
-        self.assertNotEqual(varDeclarations[-1].getEnv().resolveVariable('i'), ast.env.resolveVariable('i'))
-        self.assertEqual(varDeclarations[-1].getEnv().resolveVariable('i'), varDeclarations[-4].getEnv().resolveVariable('i'))
+        i = varDeclarations[0]
+        s = varDeclarations[1]
+        t = varDeclarations[2]
+        foo_i1 = varDeclarations[3]
+        foo_s = varDeclarations[4]
+        bar_s = varDeclarations[5]
+        person_p = varDeclarations[6]
+        block_i = varDeclarations[7]
+        block_person_p = varDeclarations[8]
+        block_block_block_p = varDeclarations[9]
+        block_block_block_p1 = varDeclarations[10]
 
-        self.assertNotEqual(varDeclarations[7].getEnv().resolveVariable('p'), ast.env.resolveVariable('p'))
-        self.assertEqual(varDeclarations[3].getEnv().resolveVariable('i')['ast'], varDeclarations[3])
-        self.assertEqual(varDeclarations[3].getEnv().resolveVariable('s'), ast.env.resolveVariable('s'))
-        self.assertNotEqual(varDeclarations[5].getEnv().resolveVariable('i'), ast.env.resolveVariable('i'))
-        self.assertNotEqual(varDeclarations[5].getEnv().resolveVariable('s'), ast.env.resolveVariable('s'))
-        self.assertEqual(varDeclarations[5].getEnv().resolveVariable('t'), ast.env.resolveVariable('t'))
-
-        self.assertNotEqual(varDeclarations[-6].getEnv().resolveVariable('p'), ast.env.resolveVariable('p'))
+        self.assertEqual(s.getEnv(), ast.env)
+        self.assertNotEqual(foo_s.getEnv().resolveVariable('s'), ast.env.resolveVariable('s'))
+        self.assertNotEqual(foo_s.getEnv().resolveVariable('s'), bar_s.getEnv().resolveVariable('s'))
+        self.assertIsNotNone(foo_s.getEnv().resolveVariable('i'))
+        self.assertNotEqual(foo_s.getEnv().resolveVariable('i'), ast.env.resolveVariable('i'))
+        self.assertNotEqual(foo_s.getEnv().resolveVariable('i'), bar_s.getEnv().resolveVariable('i'))
+        self.assertIsNotNone(foo_s.getEnv().resolveVariable('i1'))
+        self.assertIsNone(ast.env.resolveVariable('p'))
+        self.assertIsNotNone(person_p.getEnv().resolveVariable('p'))
+        self.assertNotEqual(person_p.getEnv().resolveVariable('p'), block_block_block_p.getEnv().resolveVariable('p'))
+        self.assertNotEqual(block_person_p.getEnv().resolveVariable('p'), block_block_block_p.getEnv().resolveVariable('p'))
+        self.assertNotEqual(block_person_p.getEnv().resolveVariable('p'), person_p.getEnv().resolveVariable('p'))
+        self.assertIsNone(block_person_p.getEnv().resolveVariable('p1'))
+        self.assertIsNone(ast.env.resolveVariable('p1'))
+        self.assertNotEqual(ast.env.resolveVariable('i'), block_block_block_p1.getEnv().resolveVariable('i'))
 
     def test_resolve_build_in(self):
         res = self.compile('{Int a;}')

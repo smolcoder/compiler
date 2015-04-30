@@ -171,3 +171,9 @@ class ProgrammeASTNode(NonTerminalASTNode):
     def __init__(self, source):
         NonTerminalASTNode.__init__(self, 'Programme', source)
         self.root = self
+
+    def getJustBlock(self):
+        for c in self.getChildren():
+            if c.name == 'justBlock':
+                return c
+        return None

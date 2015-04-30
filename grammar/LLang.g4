@@ -1,11 +1,8 @@
 grammar LLang;
 
+// Should contain only one justBlock. It is start point of whole programe.
 programme
     : (variableDeclarationStatement | functionDeclaration | recordDeclaration | justBlock)*
-    ;
-
-justBlock
-    : block
     ;
 
 recordDeclaration
@@ -106,8 +103,14 @@ cortegeTypeNonEmptyList
     : cortegeTypeUnit (',' cortegeTypeUnit)*
     ;
 
+// Shouldn't have own scope!
 block
     : '{' statement* '}'
+    ;
+
+// Has its own scope unlike block
+justBlock
+    : block
     ;
 
 statement
