@@ -29,3 +29,8 @@ class NameAlreadyDefinedError(CompilerError):
 class LLangSyntaxError(CompilerError):
     def __init__(self, msg, source=None):
         CompilerError.__init__(self, "Syntax error: {}".format(msg), source)
+
+
+class TypeMismatchError(CompilerError):
+    def __init__(self, source):
+        CompilerError.__init__(self, 'Type mismatch', source)

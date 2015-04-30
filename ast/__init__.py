@@ -143,6 +143,9 @@ class ASTWalker:
         return 'visit' + capitalizeFirst(s)
 
     def walk(self, listener, ast, *args, **kwargs):
+        """
+        :type listener: BaseASTListener
+        """
         if isinstance(ast, TerminalASTNode):
             name = self.buildVisitName(ast.name)
             if hasattr(listener, name):

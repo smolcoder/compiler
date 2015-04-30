@@ -216,12 +216,12 @@ leftHandSide
 	;
 
 cortegeAccess
-    : identifier '.' cortegeAccess
+    : cortegeAccess '[' intLiteral ']'
     | identifier '[' intLiteral ']'
     ;
 
 recordFieldAccess
-    : identifier '.' leftHandSide
+    : identifier ('.' identifier)* '.' (identifier | cortegeAccess)
     ;
 
 literal
