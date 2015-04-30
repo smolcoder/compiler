@@ -1,6 +1,6 @@
 from ast import ASTWalker
 from ast import BaseASTListener
-from errors import CompilerError
+from errors import CompilerError, NameAlreadyDefinedError
 from utils import Stack
 
 
@@ -8,6 +8,13 @@ class Env:
     def __init__(self, ast):
         self.ast = ast
         self.variables = {}  # variables (name, type)
+        self.build_ins = {
+            'readln': {'returnType': 'None'},
+            'writeln': {'returnType': 'None'},
+        }
+
+    def isBuildIn(self, name):
+        return name in self.build_ins
 
     def putVariable(self, name, _type, ast):
         if name in self.variables:
@@ -29,29 +36,32 @@ class Env:
     def resolveVariable(self, name):
         return self._resolveName(name, 'variables')
 
+    def resolveBuildIn(self, name):
+        return self.build_ins.get(name)
+
 
 class GlobalEnv(Env):
     def __init__(self, ast):
         Env.__init__(self, ast)
-        self.functions = {}  # signatures (name, arguments, return type)
+        self.functions = {}  # signatures (arguments, return type)
         self.records = {}    # record's Env
 
     def putFunction(self, ast):
         name = ast.getName()
-        if name in self.functions or name in self.records:
+        if name in self.functions or name in self.records or self.isBuildIn(name):
             return False
         self.functions[name] = {'type': ast.getReturnType(), 'args': ast.getArguments(), 'ast': ast}
         return True
 
     def putRecord(self, ast):
         name = ast.left.value
-        if name in self.records or name in self.functions:
+        if name in self.records or name in self.functions or self.isBuildIn(name):
             return False
         self.records[name] = {'env': ast.env, 'ast': ast}
         return True
 
     def resolveFunction(self, name):
-        return self._resolveName(name, 'functions')
+        return self.resolveBuildIn(name) or self._resolveName(name, 'functions')
 
     def resolveRecord(self, name):
         return self._resolveName(name, 'records')
@@ -62,9 +72,6 @@ class BuildEnvListener(BaseASTListener):
         self.stack = Stack()
         self.globalEnv = None
         self.errors = []
-
-    def addError(self, msg, sourceInfo):
-        self.errors.append(CompilerError(msg, sourceInfo.line, sourceInfo.column))
 
     def enterProgramme(self, ast):
         ast.env = GlobalEnv(ast)
@@ -95,13 +102,13 @@ class BuildEnvListener(BaseASTListener):
     def enterRecordBody(self, ast):
         ast.env = Env(ast)
         if not self.globalEnv.putRecord(ast):
-            self.addError("Name '{}' already defined.".format(ast.left.value), ast.left.source)
+            self.errors.append(NameAlreadyDefinedError(ast.left.value, ast.left.source))
         self.stack.push(ast.env)
 
     def enterVariableDeclaration(self, ast):
         env = self.stack.top()
         if not env.putVariable(ast.getName(), ast.getType(), ast):
-            self.addError("Name '{}' already defined.".format(ast.getName()), ast.source)
+            self.errors.append(NameAlreadyDefinedError(ast.getName(), ast.source))
 
     def exitRecordBody(self, ast):
         self.stack.pop()
@@ -111,7 +118,7 @@ class BuildEnvListener(BaseASTListener):
         self.stack.push(ast.env)
         s = ast.getFirstChild()  # signature
         if not self.globalEnv.putFunction(s):
-            self.addError("Name '{}' already defined.".format(s.getName()), s.source)
+            self.errors.append(NameAlreadyDefinedError(s.getName(), s.source))
 
     def enterFunctionSignature(self, ast):
         env = self.stack.top()

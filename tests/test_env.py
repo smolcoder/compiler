@@ -32,6 +32,10 @@ class NameCollisionTestCase(BaseTestCase):
     def test_function_variable(self):
         self.assertHasNoError('fun foo(): None {} Int foo;')
 
+    def test_build_in(self):
+        self.assertHasError('fun readln():None {}')
+        self.assertHasError('fun writeln():None {}')
+
 
 class EnvTestCase(BaseTestCase):
     def setUp(self):
@@ -67,3 +71,9 @@ class EnvTestCase(BaseTestCase):
         self.assertEqual(varDeclarations[5].getEnv().resolveVariable('t'), ast.env.resolveVariable('t'))
 
         self.assertNotEqual(varDeclarations[-6].getEnv().resolveVariable('p'), ast.env.resolveVariable('p'))
+
+    def test_resolve_build_in(self):
+        res = self.compile('{Int a;}')
+        var = res.ast.filterByName('variableDeclaration')[0]
+        self.assertIsNotNone(var.getEnv().resolveBuildIn('readln'))
+        self.assertIsNotNone(res.ast.getEnv().resolveFunction('writeln'))

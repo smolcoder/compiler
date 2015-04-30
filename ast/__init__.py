@@ -1,4 +1,4 @@
-from errors import CompilerError
+from errors import CompilerError, LLangSyntaxError
 from antlr4.error.ErrorListener import ErrorListener
 import sys
 from grammar.gen.LLangListener import LLangListener
@@ -129,7 +129,7 @@ class SyntaxErrorListener(ErrorListener):
         self.errors = []
 
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        self.errors.append(CompilerError('Syntax error: {}'.format(offendingSymbol.text), line, column))
+        self.errors.append(LLangSyntaxError(offendingSymbol.text, SourceInfo(None, None, line, column)))
 
 
 class ASTWalker:
