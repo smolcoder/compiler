@@ -189,3 +189,12 @@ class ProgrammeASTNode(NonTerminalASTNode):
             if c.name == 'justBlock':
                 return c
         return None
+
+
+class ExpressionASTNode(NonTerminalASTNode):
+    def __init__(self, source):
+        NonTerminalASTNode.__init__(self, 'expression', source)
+        self.type = None
+
+    def getType(self):
+        return getattr(self, 'type')

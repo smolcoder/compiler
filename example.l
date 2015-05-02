@@ -10,9 +10,7 @@ Bool bool = false;
 
 // Corteges
 [Int, Int] point = [2, 3];
-[Int, Bool, Str,
-        [Int,
-                Bool]] multiTypeCortege;
+[Int, Bool, Str,[Int, Bool]] multiTypeCortege;
 
 
 // Records
@@ -97,4 +95,10 @@ fun foo(a:Int, b:Int):Int {
         writeln(f);
     }
     return 1 + result * 3;
+}
+
+{
+    multiTypeCortege = [1, true, "str", [2, false]];
+    global_int = ! true;
+//    global_int
 }

@@ -13,13 +13,6 @@ class TypeCheckListener(BaseASTListener):
         self.errors = []
         self.env = globalEnv
 
-    def enterExprType(self, ast):
-        if ast.getFirstChild().name != 'RecordID':
-            return
-        name = ast.getFirstChild().typeName
-        if not self.env.resolveRecord(name):
-            self.errors.append(NameNotFoundError(name, ast.source))
-
     def enterFunctionInvocation(self, ast):
         name = ast.getFirstChild().value
         functionInfo = self.env.resolveFunction(name)
@@ -29,7 +22,18 @@ class TypeCheckListener(BaseASTListener):
         elif functionInfo:
             ast.type = functionInfo['ast'].getReturnType()
         else:
-            self.errors.append(NameNotFoundError(name, ast.source))
+            raise Exception("Existence listener skipped this case!")
+
+    def exitFunctionInvocation(self, ast):
+        pass
+
+    # def exitLiteral(self, ast):
+    #     ast.type = ast.getFirstChild().type
+    #
+    # def exitCortegeInitializer(self, ast):
+    #     ast.type = []
+    #     for c in ast.getChildren():
+    #         ast.type.append(c.type)
 
     def enterLeftHandSide(self, ast):
         env = ast.getEnv()
@@ -52,6 +56,25 @@ class TypeCheckListener(BaseASTListener):
                 self.errors.append(e)
             else:
                 ast.type = t
+
+    def exitExpression(self, ast):
+        chCount = len(ast.getChildren())
+        fc = ast.getFirstChild()
+
+        # if chCount == 1:
+        #     ast.type = fc.type
+        # elif fc.name == 'UnaryOperator':
+        #     t = ast.getChild(1).type
+        #     if fc.value == '!':
+        #         if t != 'Bool':
+        #             self.errors.append(TypeMismatchError(fc.source, msg="can't apply '!' to {}".format(t)))
+        #         ast.type = 'Bool'  # assign type any way for recovery
+        #     elif fc.value == '-':
+        #         if t != 'Int':
+        #             self.errors.append(TypeMismatchError(fc.source, msg="can't apply '-' to {}".format(t)))
+        #         ast.type = 'Int'
+
+
 
 
 def getVariableType(va, env=None):
@@ -111,7 +134,7 @@ def getFieldAccessType(rfa, globalEnv, env=None):
     return getFieldAccessType(rfa.getChild(1), globalEnv, recInfo['env'])
 
 
-def typeCheck(ast, env):
+def typeCheck(ast, env):  # todo remove env argument
     listener = TypeCheckListener(env)
     walkAST(listener, ast)
     return listener.errors

@@ -71,6 +71,9 @@ class ASTBuildListener(LLangListener):
     def exitBoolLiteral(self, ctx):
         ctx.ast = BoolLiteralASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 
+    def enterExpression(self, ctx):
+        ctx.ast = ExpressionASTNode(getSource(ctx))
+
     def exitPrimitiveType(self, ctx):
         ctx.ast = PrimitiveTypeASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 
