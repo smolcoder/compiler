@@ -52,12 +52,8 @@ fun pow(n:Int, k:Int):Int {
 
 // Record usage
 fun getPerson():Person {
-    // inline initialization
-    Person p = Person(age=15, gender="male", address=Address(house=2, street="Lenin"), passportInfo = getPassportInfo());
-    // access
+    Person p = Person(age=15, gender="male", address=Address(street="Lenin", house=2), passportInfo = getPassportInfo());
     p.age = 13;
-    p.age.a = 14;
-    p.age.b[1] = 15;
     {
         {
             // Empty block
@@ -71,10 +67,9 @@ fun getPerson():Person {
 }
 
 // Cortege example
-fun getPassportInfo(asdf: [Int, [Str, Bool]]):[Int, Int, Str] {
+fun getPassportInfo(asdf: [Int, [Str, Bool]]): [Int, Int, Str] {
     // initialization
     [Int, Int, Str] result = [1234, 567890, "UFMS"];
-    // access
     result[0] = 4321;
     return result;
 }
@@ -93,7 +88,7 @@ fun foo(a:Int, b:Int):Int {
                 result = 3;
             }
             result += 1 + 2 * (3 + 4) - -5 / 6 % 7;
-        } elif(smth) {
+        } elif (false && true) {
             result = 5;
         } else {
             doNothing();
@@ -102,12 +97,4 @@ fun foo(a:Int, b:Int):Int {
         writeln(f);
     }
     return 1 + result * 3;
-}
-
-
-{
-    a.b.c = 1 + c * 2 + doNothing();
-    a.b.c[0] = 2;
-//    c[1][2][3] = 0;
-    c = 0;
 }
