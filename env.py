@@ -123,7 +123,9 @@ class BuildEnvListener(BaseASTListener):
     def enterFunctionSignature(self, ast):
         env = self.stack.top()
         for i, (name, _type) in enumerate(ast.getArguments()):
-            env.putVariable(name, _type, ast.getChild(i))
+            varAst = ast.getChild(i)
+            if not env.putVariable(name, _type, varAst):
+                self.errors.append(NameAlreadyDefinedError(name, varAst.source))
 
     def exitFunctionDeclaration(self, ast):
         self.stack.pop()

@@ -15,6 +15,9 @@ class NameCollisionTestCase(BaseTestCase):
 
         self.assertHasNoError('{while(3){Int i; {Int i;}}}')
 
+        self.assertHasError('fun foo(a:Int, a:Int):None {}')
+        self.assertHasError('{Int a; Int a;}')
+
     def test_function(self):
         self.assertHasError('fun foo():None {}\nfun foo():None {}')
         self.assertHasError('fun foo():None {}\nfun foo(a: Int):None {}')
