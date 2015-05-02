@@ -49,8 +49,8 @@ def serializedATN():
         buf.write(u"&\3&\3&\3&\7&\u015a\n&\f&\16&\u015d\13&\3&\5&\u0160\n")
         buf.write(u"&\3\'\3\'\3\'\3\'\3\'\3\'\3(\3(\3(\3)\3)\3)\3*\3*\3*")
         buf.write(u"\3*\3*\3+\3+\3+\3,\3,\3,\3,\3,\7,\u017b\n,\f,\16,\u017e")
-        buf.write(u"\13,\3,\3,\3-\3-\3-\3.\3.\3.\5.\u0188\n.\3.\3.\3/\3/")
-        buf.write(u"\3/\7/\u018f\n/\f/\16/\u0192\13/\3\60\3\60\3\60\3\60")
+        buf.write(u"\13,\3,\3,\3-\3-\3-\3.\3.\3.\3.\3.\3/\3/\3/\7/\u018d")
+        buf.write(u"\n/\f/\16/\u0190\13/\5/\u0192\n/\3\60\3\60\3\60\3\60")
         buf.write(u"\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\5\60\u01a1")
         buf.write(u"\n\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3")
         buf.write(u"\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60\3\60")
@@ -77,7 +77,7 @@ def serializedATN():
         buf.write(u"\3\2\2\2B\u0135\3\2\2\2D\u013b\3\2\2\2F\u014d\3\2\2\2")
         buf.write(u"H\u0151\3\2\2\2J\u0153\3\2\2\2L\u0161\3\2\2\2N\u0167")
         buf.write(u"\3\2\2\2P\u016a\3\2\2\2R\u016d\3\2\2\2T\u0172\3\2\2\2")
-        buf.write(u"V\u0175\3\2\2\2X\u0181\3\2\2\2Z\u0184\3\2\2\2\\\u018b")
+        buf.write(u"V\u0175\3\2\2\2X\u0181\3\2\2\2Z\u0184\3\2\2\2\\\u0191")
         buf.write(u"\3\2\2\2^\u01a0\3\2\2\2`\u01bb\3\2\2\2b\u01be\3\2\2\2")
         buf.write(u"d\u01c5\3\2\2\2f\u01c7\3\2\2\2h\u01dd\3\2\2\2j\u01e2")
         buf.write(u"\3\2\2\2l\u01e4\3\2\2\2n\u01e6\3\2\2\2p\u01e8\3\2\2\2")
@@ -191,12 +191,12 @@ def serializedATN():
         buf.write(u"\2\u017c\u017d\3\2\2\2\u017d\u017f\3\2\2\2\u017e\u017c")
         buf.write(u"\3\2\2\2\u017f\u0180\7\6\2\2\u0180W\3\2\2\2\u0181\u0182")
         buf.write(u"\5Z.\2\u0182\u0183\7\t\2\2\u0183Y\3\2\2\2\u0184\u0185")
-        buf.write(u"\5\u0080A\2\u0185\u0187\7\5\2\2\u0186\u0188\5\\/\2\u0187")
-        buf.write(u"\u0186\3\2\2\2\u0187\u0188\3\2\2\2\u0188\u0189\3\2\2")
-        buf.write(u"\2\u0189\u018a\7\6\2\2\u018a[\3\2\2\2\u018b\u0190\5^")
-        buf.write(u"\60\2\u018c\u018d\7\b\2\2\u018d\u018f\5^\60\2\u018e\u018c")
-        buf.write(u"\3\2\2\2\u018f\u0192\3\2\2\2\u0190\u018e\3\2\2\2\u0190")
-        buf.write(u"\u0191\3\2\2\2\u0191]\3\2\2\2\u0192\u0190\3\2\2\2\u0193")
+        buf.write(u"\5\u0080A\2\u0185\u0186\7\5\2\2\u0186\u0187\5\\/\2\u0187")
+        buf.write(u"\u0188\7\6\2\2\u0188[\3\2\2\2\u0189\u018e\5^\60\2\u018a")
+        buf.write(u"\u018b\7\b\2\2\u018b\u018d\5^\60\2\u018c\u018a\3\2\2")
+        buf.write(u"\2\u018d\u0190\3\2\2\2\u018e\u018c\3\2\2\2\u018e\u018f")
+        buf.write(u"\3\2\2\2\u018f\u0192\3\2\2\2\u0190\u018e\3\2\2\2\u0191")
+        buf.write(u"\u0189\3\2\2\2\u0191\u0192\3\2\2\2\u0192]\3\2\2\2\u0193")
         buf.write(u"\u0194\b\60\1\2\u0194\u0195\5r:\2\u0195\u0196\5^\60\16")
         buf.write(u"\u0196\u01a1\3\2\2\2\u0197\u01a1\5Z.\2\u0198\u01a1\5")
         buf.write(u"j\66\2\u0199\u01a1\5\36\20\2\u019a\u01a1\5\30\r\2\u019b")
@@ -244,7 +244,7 @@ def serializedATN():
         buf.write(u"\u0088\u0093\u009f\u00a7\u00ad\u00b1\u00ba\u00ca\u00d0")
         buf.write(u"\u00d9\u00e4\u00ed\u00f6\u00fb\u010d\u0114\u011b\u012c")
         buf.write(u"\u0133\u013e\u0142\u0146\u014d\u0151\u015b\u015f\u017c")
-        buf.write(u"\u0187\u0190\u01a0\u01b6\u01b8\u01c5\u01d4\u01da\u01dd")
+        buf.write(u"\u018e\u0191\u01a0\u01b6\u01b8\u01c5\u01d4\u01da\u01dd")
         buf.write(u"\u01e2")
         return buf.getvalue()
 		
@@ -3167,21 +3167,15 @@ class LLangParser ( Parser ):
 
         localctx = LLangParser.FunctionInvocationContext(self, self._ctx, self.state)
         self.enterRule(localctx, 88, self.RULE_functionInvocation)
-        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 386 
             self.identifier()
             self.state = 387
             self.match(LLangParser.T__2)
+            self.state = 388 
+            self.argumentList()
             self.state = 389
-            _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << LLangParser.T__2) | (1 << LLangParser.T__8) | (1 << LLangParser.T__9) | (1 << LLangParser.T__12) | (1 << LLangParser.T__13) | (1 << LLangParser.Identifier) | (1 << LLangParser.BooleanLiteral) | (1 << LLangParser.StringLiteral) | (1 << LLangParser.IntegerLiteral))) != 0):
-                self.state = 388 
-                self.argumentList()
-
-
-            self.state = 391
             self.match(LLangParser.T__3)
         except RecognitionException as re:
             localctx.exception = re
@@ -3231,19 +3225,24 @@ class LLangParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 393 
-            self.expression(0)
-            self.state = 398
-            self._errHandler.sync(self)
+            self.state = 399
             _la = self._input.LA(1)
-            while _la==LLangParser.T__5:
-                self.state = 394
-                self.match(LLangParser.T__5)
-                self.state = 395 
+            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << LLangParser.T__2) | (1 << LLangParser.T__8) | (1 << LLangParser.T__9) | (1 << LLangParser.T__12) | (1 << LLangParser.T__13) | (1 << LLangParser.Identifier) | (1 << LLangParser.BooleanLiteral) | (1 << LLangParser.StringLiteral) | (1 << LLangParser.IntegerLiteral))) != 0):
+                self.state = 391 
                 self.expression(0)
-                self.state = 400
+                self.state = 396
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
+                while _la==LLangParser.T__5:
+                    self.state = 392
+                    self.match(LLangParser.T__5)
+                    self.state = 393 
+                    self.expression(0)
+                    self.state = 398
+                    self._errHandler.sync(self)
+                    _la = self._input.LA(1)
+
+
 
         except RecognitionException as re:
             localctx.exception = re

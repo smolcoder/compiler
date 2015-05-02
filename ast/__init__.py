@@ -93,6 +93,12 @@ class ASTBuildListener(LLangListener):
         else:
             ctx.ast = IdASTNode(getSource(ctx), value)
 
+    def enterElifBlock(self, ctx):
+        ctx.ast = ElifBlockASTNode(getSource(ctx))
+
+    def enterElseBlock(self, ctx):
+        ctx.ast = ElseBlockASTNode(getSource(ctx))
+
     def exitRecordId(self, ctx):
         ctx.ast = RecordIdASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 
@@ -101,6 +107,9 @@ class ASTBuildListener(LLangListener):
 
     def enterCortegeTypeNonEmptyList(self, ctx):
         ctx.ast.typeName = []
+
+    def enterIfStatement(self, ctx):
+        ctx.ast = IfStatementASTNode(getSource(ctx))
 
     def exitCortegeType(self, ctx):
         ctx.ast.typeName = ctx.ast.getFirstChild().typeName

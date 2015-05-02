@@ -1,7 +1,7 @@
 from distutils.errors import CompileError
 from ast import BaseASTListener, walkAST, OperatorASTNode, ExpressionASTNode
 from env import GlobalEnv
-from errors import NameNotFoundError, TypeMismatchError, TypeNotFoundError, CompilerError
+from errors import NameNotFoundError, TypeMismatchError, TypeNotFoundError, CompilerError, NameAlreadyDefinedError
 from utils import isPrimitive
 
 
@@ -30,10 +30,43 @@ class TypeCheckListener(BaseASTListener):
             raise Exception("Existence listener skipped this case!")
 
     def exitFunctionInvocation(self, ast):
-        pass
+        expectedArgTypes = self.env.resolveFunction(ast.getFirstChild().value)['args']
+        actualArguments = ast.getLastChild().getChildren()
+        if len(actualArguments) > len(expectedArgTypes):
+            self.errors.append(TypeMismatchError(ast.getLastChild().source, msg='extra arguments'))
+        elif len(actualArguments) < len(expectedArgTypes):
+            self.errors.append(TypeMismatchError(ast.getLastChild().source, msg='insufficient arguments'))
+        else:
+            for (name, exp), act in zip(expectedArgTypes, actualArguments):
+                if act.type != exp:
+                    self.errors.append(
+                        TypeMismatchError(act.source, msg='for argument {}: {} != {}'.format(name, exp, act.type)))
+                    break
 
     def exitRecordInitializer(self, ast):
-        pass
+        recordInfo = self.env.resolveRecord(ast.getFirstChild().value)
+        variables = recordInfo['env'].variables
+        children = ast.getLastChild().getChildren() if len(ast.getChildren()) > 1 else []
+        specified = []
+        if len(children) > len(variables):
+            self.errors.append(TypeMismatchError(ast.getLastChild().source, msg='extra arguments'))
+            return
+        if len(children) < len(variables):
+            self.errors.append(TypeMismatchError(ast.getLastChild().source, msg='insufficient arguments'))
+            return
+        for init in children:
+            name = init.getFirstChild().value
+            if name in specified:
+                self.errors.append(NameAlreadyDefinedError(name, init.source))
+                return
+            specified.append(specified)
+            varType = init.getLastChild().type
+            if name not in variables:
+                self.errors.append(NameNotFoundError(name, init.source))
+                continue
+            if varType != variables[name]['type']:
+                self.errors.append(
+                    TypeMismatchError(init.source, msg="{}: {} != {}".format(name, varType, variables[name]['type'])))
 
     def exitLiteral(self, ast):
         ast.type = ast.getFirstChild().type
@@ -122,7 +155,15 @@ class TypeCheckListener(BaseASTListener):
                     self.errors.append(TypeMismatchError(op.source, msg='Int required'))
                 ast.type = 'Int'
 
+    def exitIf(self, ast):
+        t = ast.getCondition().type
+        if t != 'Bool':
+            self.errors.append(TypeMismatchError(ast.getCondition(), msg='Bool != {}'.format(t)))
 
+    def exitElif(self, ast):
+        t = ast.getCondition().type
+        if t != 'Bool':
+            self.errors.append(TypeMismatchError(ast.getCondition(), msg='Bool != {}'.format(t)))
 
 
 def getVariableType(va, env=None):

@@ -198,3 +198,39 @@ class ExpressionASTNode(NonTerminalASTNode):
 
     def getType(self):
         return getattr(self, 'type')
+
+
+class IfStatementASTNode(NonTerminalASTNode):
+    def __init__(self, source):
+        NonTerminalASTNode.__init__(self, 'if', source)
+
+    def getBlockIfTrue(self):
+        return self.getFirstChildByName('justBlock').getFirstChild()
+
+    def getElifs(self):
+        return filter(lambda c: c.name == 'elif', self.getChildren())
+
+    def getElse(self):
+        return self.getFirstChildByName('else')
+
+    def getCondition(self):
+        return self.getFirstChildByName('expression')
+
+
+class ElseBlockASTNode(NonTerminalASTNode):
+    def __init__(self, source):
+        NonTerminalASTNode.__init__(self, 'else', source)
+
+    def getBlock(self):
+        return self.getFirstChildByName('justBlock').getFirstChild()
+
+
+class ElifBlockASTNode(NonTerminalASTNode):
+    def __init__(self, source):
+        NonTerminalASTNode.__init__(self, 'elif', source)
+
+    def getCondition(self):
+        return self.getFirstChildByName('expression')
+
+    def getBlock(self):
+        return self.getFirstChildByName('justBlock').getFirstChild()

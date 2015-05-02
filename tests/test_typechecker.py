@@ -64,3 +64,128 @@ class TypeCheckerTestCase(BaseTestCase):
                             'Person p;'
                             'p.notRecord.field = 3;'
                             '}', NameNotFoundError)
+
+    def test_arithmetic(self):
+        self.assertHasError('{Int i; i = true;')
+        self.assertHasError('{Int i = "str";')
+        self.assertHasError('{Bool f = false && 3')
+        self.assertHasError('{Bool f = "str" && true')
+        self.assertHasError('{Str s = "str" + "d"')
+        self.assertHasError('{Str s = "str" + 3')
+        self.assertHasError('{Str s = "str" + 3')
+        self.assertHasNoError('{Bool f = ((((3 + 4))) * 5 > 3) && true || (1 < 0);}')
+
+        self.assertHasNoError('Int result; Int a; Int c; Bool f = (result == 2) != !(a == -1) && (c >= 2);')
+        self.assertHasError('Bool result; Int a; Int c; Bool f = (result == 2) != !(a == -1) && (c >= 2);')
+        self.assertHasError('Int result; Str a; Int c; Bool f = (result == 2) != !(a == -1) && (c >= 2);')
+        self.assertHasError('Int result; Int a; Bool c; Bool f = (result == 2) != !(a == -1) && (c >= 2);')
+
+        self.assertHasNoError('{Int result; result += 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+        self.assertHasNoError('{Int result; result -= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+        self.assertHasNoError('{Int result; result /= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+        self.assertHasNoError('{Int result; result %= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+
+        self.assertHasError('{Str result; result %= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+        self.assertHasError('{Bool result; result %= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+        self.assertHasError('{Int result; result == 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+        self.assertHasError('{Int result; result >= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+        self.assertHasError('{Int result; result <= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
+
+        self.assertHasNoError('fun foo(a: Int, b: Str): Int {} {Int i = -foo(1, "str") * 1;}')
+        self.assertHasError('fun foo(a: Int, b: Str): [Int] {} {[Int, Int] i = foo(1, "str");}')
+        self.assertHasNoError('fun foo(a: Int, b: Str): [Int, Int] {} {[Int, Int] i = foo(1, "str");}')
+
+    def test_fun_arg_types(self):
+        self.assertHasNoError('fun foo():None{} {foo();}')
+        self.assertHasError('fun foo():None{} {foo(3);}')
+
+        self.assertHasNoError('record Rec {Int i;}'
+                              'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
+                              '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
+        self.assertHasError('record Rec {Int i;}'
+                            'fun foo(a:Int, b:Str, c:Int, d:[Int, Bool, [Str, Int]]):None {}'
+                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
+        self.assertHasError('record Rec {Int i;}'
+                            'fun foo(a:Int, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
+                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
+
+        self.assertHasError('record Rec {Int i;}'
+                            'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
+                            '{Str s; foo(1, s, new Rec(i=3), [1, 4, ["s", 2]]);}')
+
+        self.assertHasError('record Rec {Int i;}'
+                            'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
+                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]], g: Int);}')
+
+        self.assertHasError('record Rec {Int i;}'
+                            'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str]]):None {}'
+                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
+
+    def test_record_init(self):
+        self.assertHasNoError('record Rec{} {Rec r = new Rec();}')
+        self.assertHasError('record Rec{} {Rec r = new Rec(i=3);}')
+
+        self.assertHasNoError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
+                              '{Rec r = new Rec(a=1, b="str", c=[2, [false]]);}')
+        self.assertHasNoError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
+                              '{Rec r = new Rec(b="str", a=1, c=[2, [false]]);}')
+        self.assertHasNoError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
+                              'fun foo(r:Rec):None {}'
+                              '{foo(new Rec(a=1, b="str", c=[2, [false]]));}')
+
+        self.assertHasError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
+                            '{Rec r = new Rec(a=1, b="str", c=[2, ["false"]]);}')
+        self.assertHasError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
+                            '{Rec r = new Rec(b="str", c=[2, [false]]);}')
+        self.assertHasError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
+                            'fun foo(r:Rec):None {}'
+                            '{foo(new Rec(a=1, b="str", c=[2, [false]], d=3));}')
+
+    def test_if_statement(self):
+        self.assertHasNoError('fun foo():Bool {}'
+                              '{Bool f;'
+                              'if (foo() && f) {} '
+                              'elif (3 > 4) {} '
+                              'elif (false || foo()) {} '
+                              'else {} '
+                              '}')
+
+        self.assertHasError('fun foo():Int {}'
+                            '{Bool f;'
+                            'if (foo()) {} '
+                            'elif (3 > 4) {} '
+                            'elif (false || foo()) {} '
+                            'else {} '
+                            '}')
+
+        self.assertHasError('fun foo():Bool {}'
+                            '{Bool f;'
+                            'if (foo() && f) {} '
+                            'elif (3 + 4) {} '
+                            'elif (false || foo()) {} '
+                            'else {} '
+                            '}')
+
+        self.assertHasError('fun foo():Bool {}'
+                            '{Bool f;'
+                            'if (foo() && f) {} '
+                            'elif (3 > 4) {} '
+                            'elif ("asf") {} '
+                            'else {} '
+                            '}')
+
+        self.assertHasError('fun foo():Bool {}'
+                            '{Bool f;'
+                            'if (foo() && f) {} '
+                            'elif (3 > 4) {} '
+                            'elif () {} '
+                            'else {} '
+                            '}')
+
+        self.assertHasError('fun foo():Bool {}'
+                            '{Bool f;'
+                            'if () {} '
+                            'elif (3 > 4) {} '
+                            'elif (false || foo()) {} '
+                            'else {} '
+                            '}')

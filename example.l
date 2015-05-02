@@ -50,7 +50,9 @@ fun pow(n:Int, k:Int):Int {
 
 // Record usage
 fun getPerson():Person {
-    Person p = new Person(age=15, gender="male", address=new Address(street="Lenin", house=2), passportInfo = getPassportInfo());
+    Person p = new Person(age=15, gender="male",
+                          address=new Address(street="Lenin", house=2),
+                          passportInfo=getPassportInfo([1, ["s", false]]));
     p.age = 13;
     {
         {

@@ -25,6 +25,7 @@ class ParsingTestCase(BaseTestCase):
     def test_left_hand_side(self):
         self.assertHasError('{[Int, Int] a; a[1].b = 2;}')
         self.assertHasNoError('record A {[Int, Int] b;} {A a; a.b[1] = 2;}')
+        self.assertHasError('fun foo(): [Int, Int] {} {Int i = foo()[0];}')
 
     def test_none_type(self):
         self.assertHasError('None none;')

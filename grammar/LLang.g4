@@ -185,11 +185,11 @@ functionInvocationStatement
     ;
 
 functionInvocation
-    : identifier '(' argumentList? ')'
+    : identifier '(' argumentList ')'
     ;
 
 argumentList
-    : expression (',' expression)*
+    : (expression (',' expression)*)?
     ;
 
 expression
