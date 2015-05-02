@@ -139,12 +139,16 @@ whileStatement
     ;
 
 forStatement
-    : FOR '(' forInit? ';' expression? ';' forUpdate? ')' block
+    : FOR '(' forInit? ';' forCondition? ';' forUpdate? ')' block
     ;
 
 forInit
     : assignment
     | variableDeclaration
+    ;
+
+forCondition
+    : expression
     ;
 
 forUpdate

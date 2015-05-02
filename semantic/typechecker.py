@@ -165,6 +165,11 @@ class TypeCheckListener(BaseASTListener):
         if t != 'Bool':
             self.errors.append(TypeMismatchError(ast.getCondition(), msg='Bool != {}'.format(t)))
 
+    def exitForCondition(self, ast):
+        ast.type = ast.getFirstChild().type
+        if ast.type != 'Bool':
+            self.errors.append(TypeMismatchError(ast.source, msg='Bool != {}'.format(ast.type)))
+
 
 def getVariableType(va, env=None):
     env = env or va.getEnv()

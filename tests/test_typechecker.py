@@ -189,3 +189,13 @@ class TypeCheckerTestCase(BaseTestCase):
                             'elif (false || foo()) {} '
                             'else {} '
                             '}')
+
+    def test_for_condition(self):
+        self.assertHasNoError('{for (Int i = 1; i < 10; i += 1) {}}')
+        self.assertHasNoError('{for (Int i = 1; i == 10; i -= 3) {}}')
+        self.assertHasNoError('{for (Int i = 1; i >= 10; i /= 5) {}}')
+        self.assertHasError('fun foo():None {} {for (Int i = 1; foo(); i *= 5) {}}')
+        self.assertHasError('fun foo(i: Int):Int {} {for (Int i = 1; foo(i); i *= 5) {}}')
+        self.assertHasError('fun foo(i: Int):Str {} {for (Int i = 1; foo(i); i *= 5) {}}')
+        self.assertHasError('fun foo(i: Int):[Bool] {} {for (Int i = 1; foo(i); i *= 5) {}}')
+        self.assertHasNoError('fun foo(i: Int):Bool {} {for (Int i = 1; foo(i); i *= 5) {}}')

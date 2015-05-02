@@ -67,7 +67,7 @@ fun getPerson():Person {
 }
 
 // Cortege example
-fun getPassportInfo(asdf: [Int, [Str, Bool]]): [Int, Int, Str] {
+fun getPassportInfo(a: [Int, [Str, Bool]]): [Int, Int, Str] {
     // initialization
     [Int, Int, Str] result = [1234, 567890, "UFMS"];
     result[0] = 4321;

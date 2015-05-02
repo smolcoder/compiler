@@ -9,3 +9,6 @@ class NameNotFoundTestCase(BaseTestCase):
 
     def test_function_not_found(self):
         self.assertHasError('{foo();}', NameNotFoundError)
+
+    def test_for_statement(self):
+        self.assertHasError('{for (; i < 10; i += 1) {}}')

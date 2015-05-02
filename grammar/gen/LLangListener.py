@@ -319,6 +319,15 @@ class LLangListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by LLangParser#forCondition.
+    def enterForCondition(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#forCondition.
+    def exitForCondition(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by LLangParser#forUpdate.
     def enterForUpdate(self, ctx):
         pass

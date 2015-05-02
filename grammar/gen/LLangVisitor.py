@@ -180,6 +180,11 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by LLangParser#forCondition.
+    def visitForCondition(self, ctx):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by LLangParser#forUpdate.
     def visitForUpdate(self, ctx):
         return self.visitChildren(ctx)
