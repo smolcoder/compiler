@@ -203,9 +203,7 @@ expression
     | literal
     | cortegeInitializer
     | recordInitializer
-    | identifier
-    | cortegeAccess
-    | recordFieldAccess
+    | leftHandSide
     | '(' expression ')'
     ;
 
@@ -229,7 +227,8 @@ cortegeAccess
     ;
 
 recordFieldAccess
-    : identifier ('.' identifier)* '.' (identifier | cortegeAccess)
+    : identifier ('.' recordFieldAccess)?
+    | cortegeAccess
     ;
 
 literal

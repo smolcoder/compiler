@@ -106,7 +106,8 @@ fun foo(a:Int, b:Int):Int {
 
 
 {
-    a.b.c = 1 + c * 2;
-    a.b.c[1] = 2;
-    c[1][2][3] = 0;
+    a.b.c = 1 + c * 2 + doNothing();
+    a.b.c[0] = 2;
+//    c[1][2][3] = 0;
+    c = 0;
 }

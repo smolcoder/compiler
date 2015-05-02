@@ -15,7 +15,7 @@ class BaseTestCase(unittest.TestCase):
 
     def assertHasError(self, code):
         result = self.compile(code)
-        self.assertTrue(result.errors is not None)
+        self.assertIsNotNone(result.errors)
         self.assertNotEquals(len(result.errors), 0, 'There is no errors.')
 
     def assertHasNoError(self, code):

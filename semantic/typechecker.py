@@ -1,7 +1,30 @@
 from distutils.errors import CompileError
-from ast import BaseASTListener, ASTWalker, walkAST
+from ast import BaseASTListener, walkAST
 from env import GlobalEnv
-from errors import NameNotFoundError, TypeMismatchError
+from errors import NameNotFoundError, TypeMismatchError, TypeNotFoundError, CompilerError
+from utils import isPrimitive
+
+
+class RecordTypeExistenceListener(BaseASTListener):
+    def __init__(self, globalEnv):
+        """
+        :type globalEnv: GlobalEnv
+        """
+        self.errors = []
+        self.env = globalEnv
+
+    def enterExprType(self, ast):
+        if ast.getFirstChild().name != 'RecordID':
+            return
+        name = ast.getFirstChild().typeName
+        if not self.env.resolveRecord(name):
+            self.errors.append(NameNotFoundError(name, ast.source))
+
+
+def checkAllRecordTypesExist(ast):
+    listener = RecordTypeExistenceListener(ast.env)
+    walkAST(listener, ast)
+    return listener.errors
 
 
 class TypeCheckListener(BaseASTListener):
@@ -33,24 +56,59 @@ class TypeCheckListener(BaseASTListener):
             name = fc.getFirstChild().name
 
 
-def getCortegeAccessType(ast):
-    fc = ast.getFirstChild()
+def getCortegeAccessType(ca, env=None):
+    """
+    :param ca: cortege access ast
+    :return: (type, error)
+    """
+    fc = ca.getFirstChild()
     if fc.name == 'cortegeAccess':
-        outerType, error = getCortegeAccessType(fc)
+        outerType, error = getCortegeAccessType(fc, env)
         if isinstance(outerType, CompileError):
             return None, error
     else:
-        name = ast.getFirstChild().value
-        info = ast.getEnv().resolveVariable(name)
+        name = ca.getFirstChild().value
+        env = env or ca.getEnv()
+        info = env.resolveVariable(name)
         if not info:
-            return None, NameNotFoundError(name, ast.source)
+            return None, NameNotFoundError(name, ca.source)
         outerType = info['type']
     if not isCortege(outerType):
-        return None, TypeMismatchError(ast.source)
-    access = int(ast.getChild(1).value)
+        return None, TypeMismatchError(ca.source)
+    access = int(ca.getChild(1).value)
     if access >= len(outerType):
-        return None, TypeMismatchError(ast.getChild(1).source, '{} - out of bound'.format(access))
+        return None, TypeMismatchError(ca.getChild(1).source, '{} - out of bound'.format(access))
     return outerType[access], None
+
+
+def getFieldAccessType(rfa, globalEnv, env=None):
+    """
+    :param rfa: record field access ast
+    :return: (type, error)
+    """
+    env = env or rfa.getEnv()
+    c = rfa.getFirstChild()
+    if len(rfa.getChildren()) == 1:
+        if c.name == 'cortegeAccess':
+            return getCortegeAccessType(c, env)
+        # c is Identifier
+        name = c.value
+        idInfo = env.resolveVariable(name)
+        if not idInfo:
+            return None, NameNotFoundError(name, c.source)
+        return idInfo['type'], None
+    name = c.value
+    curFieldInfo = env.resolveVariable(name)
+    if not curFieldInfo:
+        return None, NameNotFoundError(name, c.source)
+    type_ = curFieldInfo['type']
+    source = curFieldInfo['ast'].source
+    if isPrimitive(type_):
+        return None, CompilerError('Type {} is not a record.'.format(type_), source)
+    recInfo = globalEnv.resolveRecord(type_)  # todo is it needed? see RecordTypeExistenceListener
+    if not recInfo:
+        return None, TypeNotFoundError(type_, source)
+    return getFieldAccessType(rfa.getChild(1), globalEnv, recInfo['env'])
 
 
 def typeCheck(ast, env):

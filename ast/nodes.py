@@ -8,12 +8,22 @@ class ASTNode:
         self.parent = None
         self.root = None
         self.env = None
+        self.globalEnv = None
 
     def __str__(self):
         return self.name + str(self.source)
 
     def __repr__(self):
         return str(self)
+
+    def getGlobalEnv(self):
+        if not self.parent:
+            if not self.globalEnv:
+                self.globalEnv = self.env
+            return self.globalEnv
+        if not self.globalEnv:
+            self.globalEnv = self.parent.getGlobalEnv()
+        return self.globalEnv
 
     def getEnv(self):
         if self.env is not None:
@@ -87,6 +97,9 @@ class NonTerminalASTNode(ASTNode):
             if c.name == name:
                 return c
         return None
+
+    def getChildrenByName(self, name):
+        return filter(lambda c: c.name == name, self.getChildren())
 
     def getDeepest(self):
         if len(self._children) != 1:

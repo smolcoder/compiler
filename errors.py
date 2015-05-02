@@ -21,6 +21,11 @@ class NameNotFoundError(CompilerError):
         CompilerError.__init__(self, "Name '{}' not found".format(name), source)
 
 
+class TypeNotFoundError(CompilerError):
+    def __init__(self, name, source=None):
+        CompilerError.__init__(self, "Type '{}' not found".format(name), source)
+
+
 class NameAlreadyDefinedError(CompilerError):
     def __init__(self, name, source=None):
         CompilerError.__init__(self, "Name '{}' already defined".format(name), source)

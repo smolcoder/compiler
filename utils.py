@@ -33,3 +33,7 @@ class SourceInfo:
 
     def __repr__(self):
         return str(self)
+
+
+def isPrimitive(t):
+    return t in ['Int', 'Str', 'Bool', 'None']

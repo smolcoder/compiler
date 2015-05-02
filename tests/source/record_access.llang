@@ -1,0 +1,22 @@
+record Info {
+    Int passport = 0;
+    Address addr;
+    Int age;
+    Name name;
+}
+
+record Name {
+    Str first;
+    Str second;
+}
+
+record Address {
+    Str street;
+    Int home;
+    [Int, [Bool, Str]] c;
+}
+
+record Person {
+    Info info;
+    Int notRecord;
+}
