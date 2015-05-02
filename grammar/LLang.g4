@@ -153,7 +153,15 @@ forUpdate
     ;
 
 ifStatement
-    : IF '(' expression ')' justBlock (ELIF '(' expression ')' justBlock)* (ELSE justBlock)?
+    : IF '(' expression ')' justBlock elifBlock* elseBlock?
+    ;
+
+elifBlock
+    : ELIF '(' expression ')' justBlock
+    ;
+
+elseBlock
+    : ELSE justBlock
     ;
 
 writelnStatement

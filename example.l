@@ -93,8 +93,10 @@ fun foo(a:Int, b:Int):Int {
                 result = 3;
             }
             result += 1 + 2 * (3 + 4) - -5 / 6 % 7;
-        } else {
+        } elif(smth) {
             result = 5;
+        } else {
+            doNothing();
         }
         Bool f = (result == 2) != !(a == -1) && (c >= 2);
         writeln(f);

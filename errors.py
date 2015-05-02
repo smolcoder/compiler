@@ -32,5 +32,5 @@ class LLangSyntaxError(CompilerError):
 
 
 class TypeMismatchError(CompilerError):
-    def __init__(self, source):
-        CompilerError.__init__(self, 'Type mismatch', source)
+    def __init__(self, source, msg=None):
+        CompilerError.__init__(self, 'Type mismatch{}'.format(': {}'.format(msg) if msg else ''), source)

@@ -190,6 +190,16 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by LLangParser#elifBlock.
+    def visitElifBlock(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by LLangParser#elseBlock.
+    def visitElseBlock(self, ctx):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by LLangParser#writelnStatement.
     def visitWritelnStatement(self, ctx):
         return self.visitChildren(ctx)

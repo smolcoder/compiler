@@ -337,6 +337,24 @@ class LLangListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by LLangParser#elifBlock.
+    def enterElifBlock(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#elifBlock.
+    def exitElifBlock(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by LLangParser#elseBlock.
+    def enterElseBlock(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#elseBlock.
+    def exitElseBlock(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by LLangParser#writelnStatement.
     def enterWritelnStatement(self, ctx):
         pass

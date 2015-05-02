@@ -35,29 +35,22 @@ class TypeCheckListener(BaseASTListener):
 
 def getCortegeAccessType(ast):
     fc = ast.getFirstChild()
-    outerType = []
     if fc.name == 'cortegeAccess':
         outerType, error = getCortegeAccessType(fc)
         if isinstance(outerType, CompileError):
             return None, error
-        if not isCortege(outerType):
-            return None, TypeMismatchError(fc.source)
-        access = int(ast.getChild(1).value)
-        if access >= len(outerType):
-            return None, TypeMismatchError(fc.source)
-        return outerType[access], None
     else:
         name = ast.getFirstChild().value
         info = ast.getEnv().resolveVariable(name)
         if not info:
             return None, NameNotFoundError(name, ast.source)
         outerType = info['type']
-        if not isCortege(outerType):
-            return None, TypeMismatchError(ast.source)
-        access = int(ast.getChild(1).value)
-        if access >= len(outerType):
-            return None, TypeMismatchError(ast.source)
-        return outerType[access], None
+    if not isCortege(outerType):
+        return None, TypeMismatchError(ast.source)
+    access = int(ast.getChild(1).value)
+    if access >= len(outerType):
+        return None, TypeMismatchError(ast.getChild(1).source, '{} - out of bound'.format(access))
+    return outerType[access], None
 
 
 def typeCheck(ast, env):
