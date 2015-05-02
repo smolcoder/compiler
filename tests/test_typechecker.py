@@ -39,12 +39,11 @@ class TypeCheckerTestCase(BaseTestCase):
                                       'Person p;'
                                       'p.info.addr.home = 3;'
                                       'p.info.addr.street = "lenin";'
-                                      'p.info.addr = Address();'
-                                      'p.info = Info();'
+                                      'p.info.addr = new Address();'
+                                      'p.info = new Info();'
                                       'p.info.addr.c[0] = 2;'
                                       'p.info.addr.c[1][1] = "str";'
                                       '}')
-        print res.errors
         lhs = res.ast.filterByName('leftHandSide')
 
         self.assertEqual(lhs[0].type, 'Int')

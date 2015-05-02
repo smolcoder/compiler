@@ -11,7 +11,7 @@ class ASTNode:
         self.globalEnv = None
 
     def __str__(self):
-        return self.name + str(self.source)
+        return self.name + str(self.source) + ('[{}]'.format(getattr(self, 'type')) if hasattr(self, 'type') else '')
 
     def __repr__(self):
         return str(self)

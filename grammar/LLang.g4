@@ -46,7 +46,7 @@ variableDeclaration
     ;
 
 recordInitializer
-    : identifier '(' recordFieldInitializerList? ')'
+    : 'new' identifier '(' recordFieldInitializerList? ')'
     ;
 
 recordFieldInitializerList

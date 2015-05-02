@@ -18,7 +18,7 @@ record Person {
 {
     Int i;
 
-    Person p = Person(p=3);
+    Person p = new Person(p=3);
     {
         {
             Str p;

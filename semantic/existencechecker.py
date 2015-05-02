@@ -23,8 +23,13 @@ class ExistenceCheckListener(BaseASTListener):
     def enterFunctionInvocation(self, ast):
         name = ast.getFirstChild().value
         functionInfo = self.env.resolveFunction(name)
+        if not functionInfo:
+            self.errors.append(NameNotFoundError(name, ast.source))
+
+    def enterRecordInitializer(self, ast):
+        name = ast.getFirstChild().value
         recordInfo = self.env.resolveRecord(name)
-        if not recordInfo and not functionInfo:
+        if not recordInfo:
             self.errors.append(NameNotFoundError(name, ast.source))
 
 

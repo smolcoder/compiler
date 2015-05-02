@@ -43,14 +43,14 @@ fun pow(n:Int, k:Int):Int {
             pass;
         }
         r *= r;
-        k /= 2;
+        k %= 2;
     }
     return r;
 }
 
 // Record usage
 fun getPerson():Person {
-    Person p = Person(age=15, gender="male", address=Address(street="Lenin", house=2), passportInfo = getPassportInfo());
+    Person p = new Person(age=15, gender="male", address=new Address(street="Lenin", house=2), passportInfo = getPassportInfo());
     p.age = 13;
     {
         {
@@ -74,11 +74,11 @@ fun getPassportInfo(asdf: [Int, [Str, Bool]]): [Int, Int, Str] {
 
 // Basic example
 fun foo(a:Int, b:Int):Int {
-    Address addr = Address(house=2, street="Lenin");
+    Address addr = new Address(house=2, street="Lenin");
     Int result;
     Int c;
     readln(result, c);
-    for (addr.house = 1; addr.house <= (a + b); addr.house += 3) {
+    for (addr.house = 1; addr.house <= (a + b); c += 3) {
         if (a + b == 0) {
             result = 2;
         } elif (a + b == 1) {
@@ -99,6 +99,5 @@ fun foo(a:Int, b:Int):Int {
 
 {
     multiTypeCortege = [1, true, "str", [2, false]];
-    global_int = ! true;
-//    global_int
+    Bool f = ! true;
 }

@@ -17,7 +17,7 @@ def getSource(ctx):
 
 SKIP_SYMBOLS = ['[', ']', '{', '}', '(', ')', ';', ',', '.', ':',
                 'fun', 'return', 'readln', 'writeln', 'record',
-                'if', 'elif', 'else', 'for', 'while']
+                'if', 'elif', 'else', 'for', 'while', 'new']
 
 REMOVE_SEMICOLON_AFTER = [
     'variableDeclarationStatement',
