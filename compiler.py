@@ -6,7 +6,7 @@ from errors import CompilerError
 from grammar.gen.LLangLexer import LLangLexer
 from grammar.gen.LLangParser import LLangParser
 from semantic import checkOnlyOneOuterJustBlock
-from semantic.typechecker import typeCheck, checkAllRecordTypesExist
+from semantic.typechecker import typeCheck
 
 
 class CompilerResult:
@@ -53,10 +53,6 @@ class Compiler:
         globalEnv, envErrors = buildEnv(ast)
         if envErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=envErrors)
-
-        recTypeErrors = checkAllRecordTypesExist(ast)
-        if recTypeErrors:
-            return CompilerResult(ast=ast, globalEnv=globalEnv, errors=recTypeErrors)
 
         typeErrors = self.typeCheck(ast, globalEnv)
         if typeErrors:

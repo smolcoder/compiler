@@ -16,15 +16,12 @@ class NameCollisionTestCase(BaseTestCase):
         self.assertHasNoError('{while(3){Int i; {Int i;}}}')
 
     def test_function(self):
-        result = self.compile('fun foo():None {}\nfun foo():None {}')
-        self.assertEquals(len(result.errors), 1)
-
-        result = self.compile('fun foo(a:Int):Str {}\nfun foo(b:Str):Int {}')
-        self.assertEquals(len(result.errors), 1)
+        self.assertHasError('fun foo():None {}\nfun foo():None {}')
+        self.assertHasError('fun foo():None {}\nfun foo(a: Int):None {}')
+        self.assertHasError('fun foo(a:Int):Str {}\nfun foo(b:Str):Int {}')
 
     def test_records(self):
-        result = self.compile('record A{Int a; Int b = 3;}\nrecord A{Str s;}')
-        self.assertEquals(len(result.errors), 1)
+        self.assertHasError('record A{Int a; Int b = 3;}\nrecord A{Str s;}')
 
     def test_record_function(self):
         self.assertHasError('fun Person():None {}\nrecord Person{}')

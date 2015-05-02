@@ -5,7 +5,7 @@ from errors import NameNotFoundError, TypeMismatchError, TypeNotFoundError, Comp
 from utils import isPrimitive
 
 
-class RecordTypeExistenceListener(BaseASTListener):
+class TypeCheckListener(BaseASTListener):
     def __init__(self, globalEnv):
         """
         :type globalEnv: GlobalEnv
@@ -20,28 +20,16 @@ class RecordTypeExistenceListener(BaseASTListener):
         if not self.env.resolveRecord(name):
             self.errors.append(NameNotFoundError(name, ast.source))
 
-
-def checkAllRecordTypesExist(ast):
-    listener = RecordTypeExistenceListener(ast.env)
-    walkAST(listener, ast)
-    return listener.errors
-
-
-class TypeCheckListener(BaseASTListener):
-    def __init__(self, globalEnv):
-        """
-        :type globalEnv: GlobalEnv
-        """
-        self.errors = []
-        self.env = globalEnv
-
     def enterFunctionInvocation(self, ast):
         name = ast.getFirstChild().value
         functionInfo = self.env.resolveFunction(name)
-        if not functionInfo:
-            self.errors.append(NameNotFoundError(name, ast.source))
-        else:
+        recordInfo = self.env.resolveRecord(name)
+        if recordInfo:
+            ast.type = name
+        elif functionInfo:
             ast.type = functionInfo['ast'].getReturnType()
+        else:
+            self.errors.append(NameNotFoundError(name, ast.source))
 
     def enterLeftHandSide(self, ast):
         env = ast.getEnv()

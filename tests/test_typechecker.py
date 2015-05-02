@@ -12,10 +12,6 @@ class TypeCheckerTestCase(BaseTestCase):
         data = open('source/record_access.llang').read() + code
         return self.compile(data)
 
-    def test_all_record_types_exists(self):
-        self.assertHasError('{Person p;}')
-        self.assertHasError('record Person {Address a;}')
-
     def test_cortege_access_type(self):
         ca = self.getLeftHandSide('[Int] c; {c[0] = 2;}')
         self.assertEqual(ca.type, 'Int')
@@ -48,6 +44,7 @@ class TypeCheckerTestCase(BaseTestCase):
                                       'p.info.addr.c[0] = 2;'
                                       'p.info.addr.c[1][1] = "str";'
                                       '}')
+        print res.errors
         lhs = res.ast.filterByName('leftHandSide')
 
         self.assertEqual(lhs[0].type, 'Int')

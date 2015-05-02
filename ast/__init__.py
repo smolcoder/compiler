@@ -74,11 +74,21 @@ class ASTBuildListener(LLangListener):
     def exitPrimitiveType(self, ctx):
         ctx.ast = PrimitiveTypeASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 
+    def exitLeftHandSide(self, ctx):
+        if len(ctx.ast.getChildren()) == 1 and ctx.ast.getFirstChild().name == 'BoolLiteral':
+            oldAst = ctx.ast
+            ctx.ast = NonTerminalASTNode('literal', oldAst.source)
+            ctx.ast.addChild(oldAst.getFirstChild())
+
     def exitVoidType(self, ctx):
         ctx.ast = PrimitiveTypeASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 
     def exitIdentifier(self, ctx):
-        ctx.ast = IdASTNode(getSource(ctx), ctx.ast.getDeepest().value)
+        value = ctx.ast.getDeepest().value
+        if value in ['true', 'false']:
+            ctx.ast = BoolLiteralASTNode(getSource(ctx), value)
+        else:
+            ctx.ast = IdASTNode(getSource(ctx), value)
 
     def exitRecordId(self, ctx):
         ctx.ast = RecordIdASTNode(getSource(ctx), ctx.ast.getDeepest().value)
