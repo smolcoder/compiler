@@ -13,10 +13,15 @@ class BaseTestCase(unittest.TestCase):
     def compileFile(self, filename):
         return self.compiler.compile(FileStream(filename))
 
-    def assertHasError(self, code):
+    def assertHasError(self, code, _type=None):
         result = self.compile(code)
         self.assertIsNotNone(result.errors)
         self.assertNotEquals(len(result.errors), 0, 'There is no errors.')
+        if _type:
+            for e in result.errors:
+                if isinstance(e, _type):
+                    return
+            self.assertFalse(True, 'No exception of type ' + str(_type))
 
     def assertHasNoError(self, code):
         result = self.compile(code)

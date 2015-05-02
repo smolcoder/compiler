@@ -58,9 +58,9 @@ class Compiler:
         if recTypeErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=recTypeErrors)
 
-        # typeErrors = self.typeCheck(ast, globalEnv)
-        # if typeErrors:
-        #     return CompilerResult(ast=ast, globalEnv=globalEnv, errors=typeErrors)
+        typeErrors = self.typeCheck(ast, globalEnv)
+        if typeErrors:
+            return CompilerResult(ast=ast, globalEnv=globalEnv, errors=typeErrors)
 
         return CompilerResult(ast=ast, globalEnv=globalEnv)
 

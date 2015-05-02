@@ -40,20 +40,39 @@ class TypeCheckListener(BaseASTListener):
         functionInfo = self.env.resolveFunction(name)
         if not functionInfo:
             self.errors.append(NameNotFoundError(name, ast.source))
-        ast.type = functionInfo['ast'].getReturnType()
+        else:
+            ast.type = functionInfo['ast'].getReturnType()
 
     def enterLeftHandSide(self, ast):
         env = ast.getEnv()
         fc = ast.getFirstChild()
         if fc.name == 'Identifier':
-            name = fc.value
-            idInfo = env.resolveVariable(name)
-            if not idInfo:
-                self.errors.append(NameNotFoundError(name, fc.source))
-            ast.type = idInfo['type']
-            return
-        if fc.name == 'cortegeAccess':
-            name = fc.getFirstChild().name
+            t, e = getVariableType(fc, env)
+            if e:
+                self.errors.append(e)
+            else:
+                ast.type = t
+        elif fc.name == 'cortegeAccess':
+            t, e = getCortegeAccessType(fc)
+            if e:
+                self.errors.append(e)
+            else:
+                ast.type = t
+        else:
+            t, e = getFieldAccessType(fc, self.env)
+            if e:
+                self.errors.append(e)
+            else:
+                ast.type = t
+
+
+def getVariableType(va, env=None):
+    env = env or va.getEnv()
+    name = va.value
+    info = env.resolveVariable(name)
+    if not info:
+        return None, NameNotFoundError(name, va.source)
+    return info['type'], None
 
 
 def getCortegeAccessType(ca, env=None):
@@ -67,12 +86,10 @@ def getCortegeAccessType(ca, env=None):
         if isinstance(outerType, CompileError):
             return None, error
     else:
-        name = ca.getFirstChild().value
-        env = env or ca.getEnv()
-        info = env.resolveVariable(name)
-        if not info:
-            return None, NameNotFoundError(name, ca.source)
-        outerType = info['type']
+        t, e = getVariableType(fc, env or ca.getEnv())
+        if e:
+            return None, e
+        outerType = t
     if not isCortege(outerType):
         return None, TypeMismatchError(ca.source)
     access = int(ca.getChild(1).value)
@@ -91,12 +108,7 @@ def getFieldAccessType(rfa, globalEnv, env=None):
     if len(rfa.getChildren()) == 1:
         if c.name == 'cortegeAccess':
             return getCortegeAccessType(c, env)
-        # c is Identifier
-        name = c.value
-        idInfo = env.resolveVariable(name)
-        if not idInfo:
-            return None, NameNotFoundError(name, c.source)
-        return idInfo['type'], None
+        return getVariableType(c, env)
     name = c.value
     curFieldInfo = env.resolveVariable(name)
     if not curFieldInfo:
