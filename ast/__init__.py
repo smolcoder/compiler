@@ -74,6 +74,11 @@ class ASTBuildListener(LLangListener):
     def enterExpression(self, ctx):
         ctx.ast = ExpressionASTNode(getSource(ctx))
 
+    def exitExpression(self, ctx):
+        if len(ctx.ast.getChildren()) == 1 and ctx.ast.getFirstChild().name == 'expression':
+            ctx.ast = ctx.ast.getFirstChild()
+            ctx.ast.parent = None
+
     def exitPrimitiveType(self, ctx):
         ctx.ast = PrimitiveTypeASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 

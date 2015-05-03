@@ -76,10 +76,10 @@ class NonTerminalASTNode(ASTNode):
         self._children.append(ast)
 
     def getFirstChild(self):
-        return self._children[0]
+        return self.getChild(0)
 
     def getLastChild(self):
-        return self._children[-1]
+        return self.getChild(-1)
 
     def getChild(self, index):
         return self._children[index]
