@@ -1,8 +1,7 @@
-from errors import CompilerError, LLangSyntaxError
+from errors import LLangSyntaxError
 from antlr4.error.ErrorListener import ErrorListener
 import sys
 from grammar.gen.LLangListener import LLangListener
-from grammar.gen.LLangParser import LLangParser
 from utils import SourceInfo, getRuleName, capitalizeFirst
 from nodes import *
 
@@ -77,7 +76,6 @@ class ASTBuildListener(LLangListener):
     def exitExpression(self, ctx):
         if len(ctx.ast.getChildren()) == 1 and ctx.ast.getFirstChild().name == 'expression':
             ctx.ast = ctx.ast.getFirstChild()
-            ctx.ast.parent = None
 
     def exitPrimitiveType(self, ctx):
         ctx.ast = PrimitiveTypeASTNode(getSource(ctx), ctx.ast.getDeepest().value)

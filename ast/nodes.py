@@ -75,6 +75,14 @@ class NonTerminalASTNode(ASTNode):
             self._children[-1].right = ast
         self._children.append(ast)
 
+    def removeChild(self, index):
+        if index < 0 or index >= len(self._children):
+            return None
+        c = self._children[index]
+        self._children = self._children[:index] + self._children[index+1:]
+        c.parent = None
+        return c
+
     def getFirstChild(self):
         return self.getChild(0)
 
@@ -199,6 +207,28 @@ class ExpressionASTNode(NonTerminalASTNode):
     def getType(self):
         return getattr(self, 'type')
 
+    def getOperator(self):
+        op = filter(lambda c: isinstance(c, OperatorASTNode), self._children)
+        if op:
+            return op[0]
+        return None
+
+    def isUnaryOperation(self):
+        o = self.getOperator()
+        if o and o.name == 'UnaryOperator':
+            return o.value
+        return None
+
+    def isBinaryOperation(self):
+        o = self.getOperator()
+        return o.value if o and o.name != 'UnaryOperator' else None
+
+    def __str__(self):
+        o = self.getOperator()
+        if o:
+            return '[{}]expression'.format(o.value)
+        return NonTerminalASTNode.__str__(self)
+
 
 class IfStatementASTNode(NonTerminalASTNode):
     def __init__(self, source):
@@ -234,3 +264,34 @@ class ElifBlockASTNode(NonTerminalASTNode):
 
     def getBlock(self):
         return self.getFirstChildByName('justBlock').getFirstChild()
+
+
+# class OperatorExpressionASTNode(NonTerminalASTNode):
+#     name = 'OperatorExpression'
+#
+#     def __init__(self, source, operatorAST):
+#         NonTerminalASTNode.__init__(self, self.name, source)
+#         self.operatorAST = operatorAST
+#
+#     def operator(self):
+#         return self.operatorAST.value
+#
+#     def __str__(self):
+#         return '[{}]'.format(self.operator()) + NonTerminalASTNode.__str__(self)
+#
+#
+# class UnaryOperatorExpressionASTNode(OperatorExpressionASTNode):
+#     name = 'UnaryOperatorExpression'
+#
+#     def getExpression(self):
+#         return self.getChild(1)
+#
+#
+# class BinaryOperatorExpressionASTNode(OperatorExpressionASTNode):
+#     name = 'BinaryOperatorExpression'
+#
+#     def getLeft(self):
+#         return self.getFirstChild()
+#
+#     def getRight(self):
+#         return self.getLastChild()

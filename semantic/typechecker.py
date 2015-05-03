@@ -118,29 +118,28 @@ class TypeCheckListener(BaseASTListener):
 
     def exitExpression(self, ast):
         chCount = len(ast.getChildren())
-        fc = ast.getFirstChild()
+        op = ast.getOperator()
 
         if chCount == 1:
-            ast.type = fc.type
+            ast.type = ast.getFirstChild().type
             return
-        if fc.name == 'UnaryOperator':
+        if op.name == 'UnaryOperator':
             t = ast.getChild(1).type
-            if fc.value == '!':
+            if op.value == '!':
                 if t != 'Bool':
-                    self.errors.append(TypeMismatchError(fc.source, msg="can't apply '!' to {}".format(t)))
+                    self.errors.append(TypeMismatchError(op.source, msg="can't apply '!' to {}".format(t)))
                 ast.type = 'Bool'  # assign type any way for recovery
-            elif fc.value == '-':
+            elif op.value == '-':
                 if t != 'Int':
-                    self.errors.append(TypeMismatchError(fc.source, msg="can't apply '-' to {}".format(t)))
+                    self.errors.append(TypeMismatchError(op.source, msg="can't apply '-' to {}".format(t)))
                 ast.type = 'Int'
             return
-        l = fc
-        op = ast.getChild(1)
-        r = ast.getChild(2)
+        l = ast.getFirstChild()
+        r = ast.getLastChild()
         if isinstance(op, OperatorASTNode):
             if op.name == 'BoolOperator':
                 if l.type != 'Bool' or r.type != 'Bool':
-                    self.errors.append(TypeMismatchError(op.source, msg='Bool required'))
+                    self.errors.append(TypeMismatchError(op.source, msg='Bool is required'))
                 ast.type = 'Bool'
             elif op.name == 'EqualOrNotOperator':
                 if l.type != r.type:
@@ -148,11 +147,11 @@ class TypeCheckListener(BaseASTListener):
                 ast.type = 'Bool'
             elif op.name == 'CompareOperator':
                 if l.type != 'Int' or r.type != 'Int':
-                    self.errors.append(TypeMismatchError(op.source, msg='Int required'))
+                    self.errors.append(TypeMismatchError(op.source, msg='Int is required'))
                 ast.type = 'Bool'
             else:
                 if l.type != 'Int' or r.type != 'Int':
-                    self.errors.append(TypeMismatchError(op.source, msg='Int required'))
+                    self.errors.append(TypeMismatchError(op.source, msg='Int is required'))
                 ast.type = 'Int'
 
     def exitIf(self, ast):
