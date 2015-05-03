@@ -231,8 +231,8 @@ cortegeAccess
     ;
 
 recordFieldAccess
-    : identifier ('.' recordFieldAccess)?
-    | cortegeAccess
+    : identifier
+    | recordFieldAccess '.' (identifier | cortegeAccess)
     ;
 
 literal

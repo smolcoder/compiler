@@ -264,34 +264,3 @@ class ElifBlockASTNode(NonTerminalASTNode):
 
     def getBlock(self):
         return self.getFirstChildByName('justBlock').getFirstChild()
-
-
-# class OperatorExpressionASTNode(NonTerminalASTNode):
-#     name = 'OperatorExpression'
-#
-#     def __init__(self, source, operatorAST):
-#         NonTerminalASTNode.__init__(self, self.name, source)
-#         self.operatorAST = operatorAST
-#
-#     def operator(self):
-#         return self.operatorAST.value
-#
-#     def __str__(self):
-#         return '[{}]'.format(self.operator()) + NonTerminalASTNode.__str__(self)
-#
-#
-# class UnaryOperatorExpressionASTNode(OperatorExpressionASTNode):
-#     name = 'UnaryOperatorExpression'
-#
-#     def getExpression(self):
-#         return self.getChild(1)
-#
-#
-# class BinaryOperatorExpressionASTNode(OperatorExpressionASTNode):
-#     name = 'BinaryOperatorExpression'
-#
-#     def getLeft(self):
-#         return self.getFirstChild()
-#
-#     def getRight(self):
-#         return self.getLastChild()

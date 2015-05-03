@@ -92,7 +92,7 @@ class TypeCheckListener(BaseASTListener):
         elif fc.name == 'cortegeAccess':
             t, e = getCortegeAccessType(fc)
         else:
-            t, e = getFieldAccessType(fc, self.env)
+            t, _, e = getFieldAccessType(fc, self.env)
         if e:
             self.errors.append(e)
         ast.type = t
@@ -205,26 +205,35 @@ def getCortegeAccessType(ca, env=None):
 def getFieldAccessType(rfa, globalEnv, env=None):
     """
     :param rfa: record field access ast
-    :return: (type, error)
+    :return: (type, newEnv, error)
     """
     env = env or rfa.getEnv()
-    c = rfa.getFirstChild()
+    left = rfa.getFirstChild()
     if len(rfa.getChildren()) == 1:
-        if c.name == 'cortegeAccess':
-            return getCortegeAccessType(c, env)
-        return getVariableType(c, env)
-    name = c.value
-    curFieldInfo = env.resolveVariable(name)
-    if not curFieldInfo:
-        return None, NameNotFoundError(name, c.source)
-    type_ = curFieldInfo['type']
-    source = curFieldInfo['ast'].source
-    if isPrimitive(type_):
-        return None, CompilerError('Type {} is not a record.'.format(type_), source)
-    recInfo = globalEnv.resolveRecord(type_)  # todo is it needed? see RecordTypeExistenceListener
-    if not recInfo:
-        return None, TypeNotFoundError(type_, source)
-    return getFieldAccessType(rfa.getChild(1), globalEnv, recInfo['env'])
+        t, e = getVariableType(left, env)
+        if e:
+            return None, None, e
+        rfa.type = t
+        return t, globalEnv.resolveRecord(t)['env'], e
+    t, env, e = getFieldAccessType(left, globalEnv, env)
+    if e:
+        return None, None, e
+    right = rfa.getChild(1)
+    if not env:
+        return None, None, CompilerError('Type {} is not a record.'.format(left.type), right.source)
+    if right.name == 'cortegeAccess':
+        t, e = getCortegeAccessType(right, env)
+        if e:
+            return None, None, e
+        rfa.type = t
+        return t, env, e
+    t, e = getVariableType(right, env)
+    if e:
+        return None, None, e
+    rfa.type = t
+    if t in globalEnv.records:
+        return t, globalEnv.resolveRecord(t)['env'], e
+    return t, None, e
 
 
 def typeCheck(ast, env):  # todo remove env argument

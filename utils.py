@@ -37,3 +37,18 @@ class SourceInfo:
 
 def isPrimitive(t):
     return t in ['Int', 'Str', 'Bool', 'None']
+
+
+def jasmin(filename):
+    from os import system
+    system('java -jar lib/jasmin.jar -d out/ sources/jas/{}.j'.format(filename))
+
+
+def java(classname):
+    from os import system
+    system("java -cp 'out' {}".format(classname))
+
+
+def run(filename):
+    jasmin(filename)
+    java(filename)

@@ -1,6 +1,7 @@
 from ast import walkAST
 from ast import BaseASTListener
 from errors import NameAlreadyDefinedError
+from localvartable import LocalVariableTable
 from utils import Stack
 
 
@@ -8,6 +9,7 @@ class Env:
     def __init__(self, ast):
         self.ast = ast
         self.variables = {}  # variables (name, type)
+        self.seq_var = []
         self.build_ins = {
             'readln': {'returnType': 'None'},
             'writeln': {'returnType': 'None'},
@@ -20,6 +22,7 @@ class Env:
         if name in self.variables:
             return False
         self.variables[name] = {'type': _type, 'ast': ast}
+        self.seq_var.append(name)
         return True
 
     def _resolveName(self, name, whereStr):
@@ -38,6 +41,12 @@ class Env:
 
     def resolveBuildIn(self, name):
         return self.build_ins.get(name)
+
+    def generateLocalVariableTable(self):
+        lvt = LocalVariableTable()
+        for v in self.seq_var:
+            lvt.put(v)
+        return lvt
 
 
 class GlobalEnv(Env):
