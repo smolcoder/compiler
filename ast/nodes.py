@@ -223,6 +223,9 @@ class ExpressionASTNode(NonTerminalASTNode):
         o = self.getOperator()
         return o.value if o and o.name != 'UnaryOperator' else None
 
+    def isLiteral(self):
+        return len(self._children) == 1 and self.getFirstChild().name == 'literal'
+
     def __str__(self):
         o = self.getOperator()
         if o:
