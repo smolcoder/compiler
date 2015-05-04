@@ -1,5 +1,5 @@
-import shutil
 from generator.record import RecordGenerator
+import shutil
 from tests import BaseTestCase
 from utils import jasmin, java, here
 from os.path import realpath
@@ -7,10 +7,10 @@ import os
 
 
 class RecordGeneratorTestCase(BaseTestCase):
-    pathToOut = here('..', '..', 'test_out')
-    classpath = ':'.join([realpath(x) for x in [here('..', '..', 'test_out'),
-                                                here('..', 'source', 'java')]])
-    pathToJar = here('..', '..', 'lib')
+    pathToOut = here('test_out')
+    classpath = ':'.join([realpath(x) for x in [here('test_out'),
+                                                here('tests', 'source', 'java')]])
+    pathToJar = here('lib')
 
     def generate(self, name, globalEnv):
         ast = globalEnv.resolveRecord(name)['ast']

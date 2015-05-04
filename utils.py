@@ -64,4 +64,8 @@ def run(filename):
     java(filename)
 
 
-here = os.path.join
+ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
+
+
+def here(*args):
+    return os.path.join(ROOT_PATH, *args)

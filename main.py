@@ -5,7 +5,7 @@ from compiler import Compiler
 
 def main():
     compiler = Compiler()
-    result = compiler.compile(FileStream('_example.l'))
+    result = compiler.compile(FileStream('example.l'))
     if result.errors:
         result.printErrors()
     else:
