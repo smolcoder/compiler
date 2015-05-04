@@ -1,5 +1,14 @@
-class JasminProcessor:
-    def head(self):
+class JasminBase:
+    def getType(self, actualType):
+        if actualType == 'Int':
+            return 'I'
+        if actualType == 'Bool':
+            return 'Z'
+        if actualType == 'Str':
+            return self.strType
+        return self.recType(actualType)
+
+    def globalHead(self):
         return ['.class public Greeter', '.super java/lang/Object']
 
     def defaultConstructor(self):
@@ -17,7 +26,7 @@ class JasminProcessor:
     def _arg_opt_command(self, cmd, const):
         if const not in [0, 1, 2, 3]:
             return ['{}} {}'.format(cmd, const)]
-        return ['{}_{}'.format(cmd, const)]
+        return '{}_{}'.format(cmd, const)
 
     def iload(self, const):
         return self._arg_opt_command('iload', const)
@@ -33,12 +42,9 @@ class JasminProcessor:
             return ['iconst_0']
         return ['iconst_1']
 
-    def getStringType(self):
+    @property
+    def strType(self):
         return 'Ljava/lang/String;'
 
-
-JPROC = JasminProcessor()
-
-
-def evaluateExpression(ast):
-    pass
+    def recType(self, rec):
+        return 'LMain${};'.format(rec)

@@ -1,0 +1,37 @@
+public class Main {
+    static class R2 {
+        int i;
+        R1 r1;
+        public R2(int i) {
+            this.i = i;
+        }
+        public R2(R1 r1) {
+            this.r1 = r1;
+        }
+    }
+    static class R1 {
+        int i;
+        boolean b;
+        String s;
+        R1(int i) {
+            this.i = i;
+        }
+        R1(boolean b) {
+            this.b = b;
+        }
+        R1(String s) {
+            this.s = s;
+        }
+    }
+    public static void main(String[] args) {
+        R1 r11 = new R1(1);
+        R1 r12 = new R1(true);
+        R1 r13 = new R1("str");
+        R2 r = new R2(r11);
+        System.out.println(r.r1.i);
+        r = new R2(r12);
+        System.out.println(r.r1.b);
+        r = new R2(r13);
+        System.out.println(r.r1.s);
+    }
+}
