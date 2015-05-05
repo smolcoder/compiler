@@ -5,12 +5,15 @@ class CodeLinkerListener(BaseASTListener):
     def __init__(self):
         self.code = []
 
-    def commonAction(self, ast):
-        if hasattr(ast, 'code'):
-            self.code.append(ast.code)
+    def enterEvery(self, ast):
+        if hasattr(ast, 'code_before'):
+            self.code += ast.code_before
 
     def exitEvery(self, ast):
-        self.commonAction(ast)
+        if hasattr(ast, 'code'):
+            self.code += ast.code
+        if hasattr(ast, 'code_after'):
+            self.code += ast.code_after
 
 
 def linkCode(ast):
@@ -28,7 +31,17 @@ class NameGenerator:
         return var
 
 
+class LabelGenerator:
+    counter = 0
+
+    def nextLabel(self):
+        var = '__Label_{}'.format(self.counter)
+        self.counter += 1
+        return var
+
+
 ng = NameGenerator()
+lg = LabelGenerator()
 
 
 def threeAC(var, left, op, right):
@@ -39,13 +52,33 @@ def twoAC(var, op, arg):
     return '{} := {} {}'.format(var, op, arg)
 
 
+def oneAC(var, arg):
+    return '{} := {}'.format(var, arg)
+
+
+def testLabel(label=None):
+    return 'test {}'.format(label or lg.nextLabel())
+
+
+def goto(label):
+    return 'goto {}'.format(label)
+
+
+def label(l):
+    return '{}:'.format(l)
+
+
 class ExpressionTADListener(BaseASTListener):
     def exitExpression(self, ast):
         fc = ast.getFirstChild()
         op = ast.getOperator().value if ast.getOperator() else None
 
         if fc.name == 'literal':
-            ast.var = ast.getDeepest().value
+            if fc.getFirstChild().name == 'StrLiteral':
+                ast.var = ng.nextName()
+                ast.code = [oneAC(ast.var, '"{}"'.format(fc.getFirstChild().value))]
+            else:
+                ast.var = ast.getDeepest().value
         elif fc.name == 'leftHandSide':
             ast.var = fc.var
         elif fc.name == 'functionInvocation':
@@ -53,11 +86,11 @@ class ExpressionTADListener(BaseASTListener):
         elif op:
             ast.var = ng.nextName()
             if ast.isUnaryOperation():
-                ast.code = twoAC(ast.name, op, ast.getLastChild().var)
+                ast.code = [twoAC(ast.name, op, ast.getLastChild().var)]
             else:
                 left = fc.var
                 right = ast.getLastChild().var
-                ast.code = threeAC(ast.var, left, op, right)
+                ast.code = [threeAC(ast.var, left, op, right)]
         # else:
         #     print fc.name
         # else:
@@ -65,7 +98,10 @@ class ExpressionTADListener(BaseASTListener):
 
     def exitFunctionInvocation(self, ast):
         ast.var = ng.nextName()
-        ast.code = twoAC(ast.var, 'invoke', ast.getFirstChild().value)
+        args = []
+        for c in ast.getLastChild().getChildren():
+            args.append(c.var)
+        ast.code = [twoAC(ast.var, 'invoke', '{}({})'.format(ast.getFirstChild().value, ','.join(args)))]
 
     def exitLeftHandSide(self, ast):
         fc = ast.getFirstChild()
@@ -79,9 +115,39 @@ class ExpressionTADListener(BaseASTListener):
         op = ast.getChild(1).value
         right = ast.getLastChild().var
         if op in ['+=, -=, /=', '%=']:
-            ast.code = threeAC(left, left, op[1], right)
+            ast.code = [threeAC(left, left, op[1], right)]
         else:
-            ast.code = twoAC(left, op, right)
+            ast.code = [twoAC(left, op, right)]
+
+    def exitVariableDeclaration(self, ast):
+        expr = ast.getLastChild()
+        if expr.name == 'expression':
+            ast.code = [oneAC(ast.getChild(1).value, expr.var)]
+
+    def enterIf(self, ast):
+        ast.endLabel = 'end' + lg.nextLabel()
+
+    def exitIf(self, ast):
+        block = ast.getBlockIfTrue()
+
+        if not ast.getElifs() and not ast.getElse():
+            block.code_before = [testLabel(ast.endLabel)]
+            block.code_after = [label(ast.endLabel)]
+        else:
+            l = lg.nextLabel()
+            block.code_before = [testLabel(l)]
+            block.code_after = [goto(ast.endLabel), label(l)]
+
+    def exitElse(self, ast):
+        ast.code_after = [label(ast.parent.endLabel)]
+
+    def exitElif(self, ast):
+        block = ast.getBlock()
+        l = lg.nextLabel()
+        block.code_before = [testLabel(l)]
+        block.code_after = [goto(ast.parent.endLabel), label(l)]
+
+
 
 
 def recordAccessCode(ast):
@@ -92,8 +158,7 @@ def recordAccessCode(ast):
     ast.var = ng.nextName()
     sc = ast.getLastChild()
     leftVar = recordAccessCode(fc)
-    ast.code = threeAC(ast.var, leftVar, 'access', sc.value)
-    # return field + '.' + sc.value
+    ast.code = [threeAC(ast.var, leftVar, 'access', sc.value)]
     return ast.var
 
 

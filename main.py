@@ -12,7 +12,7 @@ def main():
         result.printErrors()
     else:
         ast = result.ast
-        # print '\n'.join(makeTAD(ast))
+        print '\n'.join(makeTAD(ast))
         pprintAST(ast)
 
 main()

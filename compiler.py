@@ -52,7 +52,6 @@ class Compiler:
         if astBuildErrors:
             return CompilerResult(ast=ast, errors=astBuildErrors)
 
-        # return CompilerResult(ast=ast)
         globalEnv, envErrors = buildEnv(ast)
         if envErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=envErrors)

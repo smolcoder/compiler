@@ -10,7 +10,8 @@ TYPE_TO_AST = {
 
 
 class ConstantPreCalculationListener(BaseASTListener):
-    errors = []
+    def __init__(self):
+        self.errors = []
 
     def exitExpression(self, ast):
         if self.errors:
