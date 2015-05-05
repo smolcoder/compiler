@@ -125,7 +125,7 @@ class ExpressionTADListener(BaseASTListener):
             ast.code = [oneAC(ast.getChild(1).value, expr.var)]
 
     def enterIf(self, ast):
-        ast.endLabel = 'end' + lg.nextLabel()
+        ast.endLabel = lg.nextLabel()
 
     def exitIf(self, ast):
         block = ast.getBlockIfTrue()
@@ -147,7 +147,14 @@ class ExpressionTADListener(BaseASTListener):
         block.code_before = [testLabel(l)]
         block.code_after = [goto(ast.parent.endLabel), label(l)]
 
-
+    def exitWhileStatement(self, ast):
+        expr = ast.getFirstChild()
+        block = ast.getLastChild()
+        whileLabel = lg.nextLabel()
+        endLabel = lg.nextLabel()
+        expr.code_before = [label(whileLabel)]
+        expr.code_after = [testLabel(endLabel)]
+        block.code_after = [goto(whileLabel), label(endLabel)]
 
 
 def recordAccessCode(ast):

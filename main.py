@@ -13,6 +13,6 @@ def main():
     else:
         ast = result.ast
         print '\n'.join(makeTAD(ast))
-        pprintAST(ast)
+        # pprintAST(ast)
 
 main()
