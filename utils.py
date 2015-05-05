@@ -69,3 +69,23 @@ ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def here(*args):
     return os.path.join(ROOT_PATH, *args)
+
+
+def isInteger(s):
+    try:
+        int(s)
+    except:
+        return False
+    return True
+
+
+def toBool(s):
+    if s == 'false':
+        return False
+    elif s == 'true':
+        return True
+    return None
+
+
+def fromBool(f):
+    return 'true' if f else 'false'

@@ -1,3 +1,6 @@
+from utils import isInteger, fromBool, toBool
+
+
 class ASTNode:
     def __init__(self, name, source):
         self.name = name
@@ -74,6 +77,9 @@ class NonTerminalASTNode(ASTNode):
             ast.left = self._children[-1]
             self._children[-1].right = ast
         self._children.append(ast)
+
+    def removeChildren(self):
+        self._children = []
 
     def removeChild(self, index):
         if index < 0 or index >= len(self._children):
@@ -184,7 +190,50 @@ class PrimitiveTypeASTNode(TerminalASTNode):
 
 
 class OperatorASTNode(TerminalASTNode):
-    pass
+    """
+    There is not enough checks!!! Use it carefully
+    """
+    def perform(self, *args):
+        op = self.value
+        if not args:
+            raise Exception('No args found')
+        a1 = args[0]
+        a2 = args[1] if len(args) > 1 else None
+
+        if op == '!':
+            return fromBool(not toBool(a1))
+        if op == '-':
+            return str(-int(a1))
+
+        if op == '+':
+            return str(int(a1) + int(a2))
+        if op == '-':
+            return str(int(a1) - int(a2))
+        if op == '*':
+            return str(int(a1) * int(a2))
+        if op == '/':
+            return str(int(a1) / int(a2))
+        if op == '%':
+            return str(int(a1) % int(a2))
+
+        if op == '<=':
+            return fromBool(int(a1) <= int(a2))
+        if op == '==':
+            return fromBool(a1 == a2)
+        if op == '!=':
+            return fromBool(a1 != a2)
+        if op == '>=':
+            return fromBool(int(a1) >= int(a2))
+        if op == '<':
+            return fromBool(int(a1) < int(a2))
+        if op == '>':
+            return fromBool(int(a1) > int(a2))
+
+        if op == '||':
+            return fromBool(toBool(a1) or toBool(a2))
+        if op == '&&':
+            return fromBool(toBool(a1) and toBool(a2))
+
 
 
 class ProgrammeASTNode(NonTerminalASTNode):

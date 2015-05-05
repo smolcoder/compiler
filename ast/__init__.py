@@ -28,6 +28,7 @@ REMOVE_SEMICOLON_AFTER = [
     'assignmentStatement',
 ]
 
+
 OPERATORS = [
     'unaryOperator',
     'mulDivModOperator',
@@ -177,6 +178,7 @@ class ASTWalker:
                 getattr(listener, name)(ast, *args, **kwargs)
             else:
                 listener.visitTerminal(ast, *args, **kwargs)
+            return
         self.enterNode(listener, ast, *args, **kwargs)
         if isinstance(ast, NonTerminalASTNode):
             for c in ast.getChildren():
