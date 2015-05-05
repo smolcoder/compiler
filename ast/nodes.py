@@ -1,3 +1,4 @@
+from errors import DivisionByZeroError
 from utils import isInteger, fromBool, toBool
 
 
@@ -193,8 +194,9 @@ class OperatorASTNode(TerminalASTNode):
     """
     There is not enough checks!!! Use it carefully
     """
-    def perform(self, *args):
+    def perform(self, *args, **kwargs):
         op = self.value
+        errors = kwargs.get('errors', [])
         if not args:
             raise Exception('No args found')
         a1 = args[0]
@@ -212,6 +214,9 @@ class OperatorASTNode(TerminalASTNode):
         if op == '*':
             return str(int(a1) * int(a2))
         if op == '/':
+            if int(a2) == 0:
+                errors.append(DivisionByZeroError(self.source))
+                return "0"
             return str(int(a1) / int(a2))
         if op == '%':
             return str(int(a1) % int(a2))

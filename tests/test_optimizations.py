@@ -15,3 +15,5 @@ class OptimizationTestCase(BaseTestCase):
         literals = res.ast.filterByName('IntLiteral')
         self.assertEqual(len(literals), 1)
         self.assertEqual(literals[0].value, '1')
+
+        self.assertHasError('{Int i = 1 / 0;}')

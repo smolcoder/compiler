@@ -197,18 +197,18 @@ argumentList
     ;
 
 expression
-    : unaryOperator expression
-    | expression mulDivModOperator expression
-    | expression addSubOperator expression
-    | expression compareOperator expression
-    | expression equalOrNotOperator expression
-    | expression boolOperator expression
+    : '(' expression ')'
+    | unaryOperator expression
+    | <assoc=left> expression mulDivModOperator expression
+    | <assoc=left> expression addSubOperator expression
+    | <assoc=left> expression compareOperator expression
+    | <assoc=left> expression equalOrNotOperator expression
+    | <assoc=left> expression boolOperator expression
     | functionInvocation
     | literal
     | cortegeInitializer
     | recordInitializer
     | leftHandSide
-    | '(' expression ')'
     ;
 
 assignmentStatement

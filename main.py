@@ -13,9 +13,6 @@ def main():
     else:
         ast = result.ast
         # print '\n'.join(makeTAD(ast))
-        # ra = ast.filterByName('leftHandSide')[-1].getFirstChild()
-        # recordAccessCode(ra)
-        # print linkCode(ra)
         pprintAST(ast)
 
 main()

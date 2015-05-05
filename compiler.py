@@ -52,6 +52,7 @@ class Compiler:
         if astBuildErrors:
             return CompilerResult(ast=ast, errors=astBuildErrors)
 
+        # return CompilerResult(ast=ast)
         globalEnv, envErrors = buildEnv(ast)
         if envErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=envErrors)
@@ -64,7 +65,9 @@ class Compiler:
         if typeErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=typeErrors)
 
-        precalculateConstants(ast)
+        dbzErrors = precalculateConstants(ast)
+        if dbzErrors:
+            return CompilerResult(ast=ast, globalEnv=globalEnv, errors=dbzErrors)
 
         return CompilerResult(ast=ast, globalEnv=globalEnv)
 

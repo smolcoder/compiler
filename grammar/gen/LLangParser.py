@@ -200,21 +200,21 @@ def serializedATN():
         buf.write(u"\3\2\2\2\u0192\u0190\3\2\2\2\u0192\u0193\3\2\2\2\u0193")
         buf.write(u"\u0196\3\2\2\2\u0194\u0192\3\2\2\2\u0195\u018d\3\2\2")
         buf.write(u"\2\u0195\u0196\3\2\2\2\u0196_\3\2\2\2\u0197\u0198\b\61")
-        buf.write(u"\1\2\u0198\u0199\5t;\2\u0199\u019a\5`\61\16\u019a\u01a5")
-        buf.write(u"\3\2\2\2\u019b\u01a5\5\\/\2\u019c\u01a5\5l\67\2\u019d")
-        buf.write(u"\u01a5\5\36\20\2\u019e\u01a5\5\30\r\2\u019f\u01a5\5f")
-        buf.write(u"\64\2\u01a0\u01a1\7\5\2\2\u01a1\u01a2\5`\61\2\u01a2\u01a3")
-        buf.write(u"\7\6\2\2\u01a3\u01a5\3\2\2\2\u01a4\u0197\3\2\2\2\u01a4")
-        buf.write(u"\u019b\3\2\2\2\u01a4\u019c\3\2\2\2\u01a4\u019d\3\2\2")
-        buf.write(u"\2\u01a4\u019e\3\2\2\2\u01a4\u019f\3\2\2\2\u01a4\u01a0")
-        buf.write(u"\3\2\2\2\u01a5\u01bc\3\2\2\2\u01a6\u01a7\f\r\2\2\u01a7")
-        buf.write(u"\u01a8\5v<\2\u01a8\u01a9\5`\61\16\u01a9\u01bb\3\2\2\2")
-        buf.write(u"\u01aa\u01ab\f\f\2\2\u01ab\u01ac\5x=\2\u01ac\u01ad\5")
-        buf.write(u"`\61\r\u01ad\u01bb\3\2\2\2\u01ae\u01af\f\13\2\2\u01af")
-        buf.write(u"\u01b0\5z>\2\u01b0\u01b1\5`\61\f\u01b1\u01bb\3\2\2\2")
-        buf.write(u"\u01b2\u01b3\f\n\2\2\u01b3\u01b4\5|?\2\u01b4\u01b5\5")
-        buf.write(u"`\61\13\u01b5\u01bb\3\2\2\2\u01b6\u01b7\f\t\2\2\u01b7")
-        buf.write(u"\u01b8\5~@\2\u01b8\u01b9\5`\61\n\u01b9\u01bb\3\2\2\2")
+        buf.write(u"\1\2\u0198\u0199\5t;\2\u0199\u019a\5`\61\r\u019a\u01a5")
+        buf.write(u"\3\2\2\2\u019b\u019c\7\5\2\2\u019c\u019d\5`\61\2\u019d")
+        buf.write(u"\u019e\7\6\2\2\u019e\u01a5\3\2\2\2\u019f\u01a5\5\\/\2")
+        buf.write(u"\u01a0\u01a5\5l\67\2\u01a1\u01a5\5\36\20\2\u01a2\u01a5")
+        buf.write(u"\5\30\r\2\u01a3\u01a5\5f\64\2\u01a4\u0197\3\2\2\2\u01a4")
+        buf.write(u"\u019b\3\2\2\2\u01a4\u019f\3\2\2\2\u01a4\u01a0\3\2\2")
+        buf.write(u"\2\u01a4\u01a1\3\2\2\2\u01a4\u01a2\3\2\2\2\u01a4\u01a3")
+        buf.write(u"\3\2\2\2\u01a5\u01bc\3\2\2\2\u01a6\u01a7\f\f\2\2\u01a7")
+        buf.write(u"\u01a8\5v<\2\u01a8\u01a9\5`\61\r\u01a9\u01bb\3\2\2\2")
+        buf.write(u"\u01aa\u01ab\f\13\2\2\u01ab\u01ac\5x=\2\u01ac\u01ad\5")
+        buf.write(u"`\61\f\u01ad\u01bb\3\2\2\2\u01ae\u01af\f\n\2\2\u01af")
+        buf.write(u"\u01b0\5z>\2\u01b0\u01b1\5`\61\13\u01b1\u01bb\3\2\2\2")
+        buf.write(u"\u01b2\u01b3\f\t\2\2\u01b3\u01b4\5|?\2\u01b4\u01b5\5")
+        buf.write(u"`\61\n\u01b5\u01bb\3\2\2\2\u01b6\u01b7\f\b\2\2\u01b7")
+        buf.write(u"\u01b8\5~@\2\u01b8\u01b9\5`\61\t\u01b9\u01bb\3\2\2\2")
         buf.write(u"\u01ba\u01a6\3\2\2\2\u01ba\u01aa\3\2\2\2\u01ba\u01ae")
         buf.write(u"\3\2\2\2\u01ba\u01b2\3\2\2\2\u01ba\u01b6\3\2\2\2\u01bb")
         buf.write(u"\u01be\3\2\2\2\u01bc\u01ba\3\2\2\2\u01bc\u01bd\3\2\2")
@@ -3396,41 +3396,41 @@ class LLangParser ( Parser ):
                 self.state = 406 
                 self.unaryOperator()
                 self.state = 407 
-                self.expression(12)
+                self.expression(11)
                 pass
 
             elif la_ == 2:
-                self.state = 409 
-                self.functionInvocation()
+                self.state = 409
+                self.match(LLangParser.T__2)
+                self.state = 410 
+                self.expression(0)
+                self.state = 411
+                self.match(LLangParser.T__3)
                 pass
 
             elif la_ == 3:
-                self.state = 410 
-                self.literal()
+                self.state = 413 
+                self.functionInvocation()
                 pass
 
             elif la_ == 4:
-                self.state = 411 
-                self.cortegeInitializer()
+                self.state = 414 
+                self.literal()
                 pass
 
             elif la_ == 5:
-                self.state = 412 
-                self.recordInitializer()
+                self.state = 415 
+                self.cortegeInitializer()
                 pass
 
             elif la_ == 6:
-                self.state = 413 
-                self.leftHandSide()
+                self.state = 416 
+                self.recordInitializer()
                 pass
 
             elif la_ == 7:
-                self.state = 414
-                self.match(LLangParser.T__2)
-                self.state = 415 
-                self.expression(0)
-                self.state = 416
-                self.match(LLangParser.T__3)
+                self.state = 417 
+                self.leftHandSide()
                 pass
 
 
@@ -3449,65 +3449,65 @@ class LLangParser ( Parser ):
                         localctx = LLangParser.ExpressionContext(self, _parentctx, _parentState)
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 420
-                        if not self.precpred(self._ctx, 11):
+                        if not self.precpred(self._ctx, 10):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 11)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 10)")
                         self.state = 421 
                         self.mulDivModOperator()
                         self.state = 422 
-                        self.expression(12)
+                        self.expression(11)
                         pass
 
                     elif la_ == 2:
                         localctx = LLangParser.ExpressionContext(self, _parentctx, _parentState)
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 424
-                        if not self.precpred(self._ctx, 10):
+                        if not self.precpred(self._ctx, 9):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 10)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
                         self.state = 425 
                         self.addSubOperator()
                         self.state = 426 
-                        self.expression(11)
+                        self.expression(10)
                         pass
 
                     elif la_ == 3:
                         localctx = LLangParser.ExpressionContext(self, _parentctx, _parentState)
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 428
-                        if not self.precpred(self._ctx, 9):
+                        if not self.precpred(self._ctx, 8):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 9)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
                         self.state = 429 
                         self.compareOperator()
                         self.state = 430 
-                        self.expression(10)
+                        self.expression(9)
                         pass
 
                     elif la_ == 4:
                         localctx = LLangParser.ExpressionContext(self, _parentctx, _parentState)
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 432
-                        if not self.precpred(self._ctx, 8):
+                        if not self.precpred(self._ctx, 7):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 8)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 7)")
                         self.state = 433 
                         self.equalOrNotOperator()
                         self.state = 434 
-                        self.expression(9)
+                        self.expression(8)
                         pass
 
                     elif la_ == 5:
                         localctx = LLangParser.ExpressionContext(self, _parentctx, _parentState)
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 436
-                        if not self.precpred(self._ctx, 7):
+                        if not self.precpred(self._ctx, 6):
                             from antlr4.error.Errors import FailedPredicateException
-                            raise FailedPredicateException(self, "self.precpred(self._ctx, 7)")
+                            raise FailedPredicateException(self, "self.precpred(self._ctx, 6)")
                         self.state = 437 
                         self.boolOperator()
                         self.state = 438 
-                        self.expression(8)
+                        self.expression(7)
                         pass
 
              
@@ -4474,23 +4474,23 @@ class LLangParser ( Parser ):
 
     def expression_sempred(self, localctx, predIndex):
             if predIndex == 0:
-                return self.precpred(self._ctx, 11)
-         
-
-            if predIndex == 1:
                 return self.precpred(self._ctx, 10)
          
 
-            if predIndex == 2:
+            if predIndex == 1:
                 return self.precpred(self._ctx, 9)
          
 
-            if predIndex == 3:
+            if predIndex == 2:
                 return self.precpred(self._ctx, 8)
          
 
-            if predIndex == 4:
+            if predIndex == 3:
                 return self.precpred(self._ctx, 7)
+         
+
+            if predIndex == 4:
+                return self.precpred(self._ctx, 6)
          
 
     def cortegeAccess_sempred(self, localctx, predIndex):
