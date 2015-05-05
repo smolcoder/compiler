@@ -1,7 +1,7 @@
 from antlr4 import FileStream
 from ast import pprintAST
 from compiler import Compiler
-from generator import recordAccessCode, linkCode
+from generator import recordAccessCode, linkCode, makeTAD
 
 
 def main():
@@ -11,9 +11,10 @@ def main():
         result.printErrors()
     else:
         ast = result.ast
-        ra = ast.filterByName('leftHandSide')[-1].getFirstChild()
-        recordAccessCode(ra)
-        print linkCode(ra)
-        # pprintAST(ra)
+        print '\n'.join(makeTAD(ast))
+        # ra = ast.filterByName('leftHandSide')[-1].getFirstChild()
+        # recordAccessCode(ra)
+        # print linkCode(ra)
+        # pprintAST(ast)
 
 main()
