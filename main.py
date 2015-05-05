@@ -4,6 +4,8 @@ from compiler import Compiler
 from generator import recordAccessCode, linkCode, makeTAD
 from semantic.optimizations import precalculateConstants
 
+# todo add checking for break and continue
+# todo  make any semantic checking abstract
 
 def main():
     compiler = Compiler()

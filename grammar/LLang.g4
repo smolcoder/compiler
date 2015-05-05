@@ -124,6 +124,24 @@ statement
     | passStatement
     | readlnStatement
     | writelnStatement
+    | breakStatement
+    | continueStatement
+    ;
+
+breakStatement
+    : breaks ';'
+    ;
+
+breaks
+    : 'break'
+    ;
+
+continueStatement
+    : continues ';'
+    ;
+
+continues
+    : 'continue'
     ;
 
 returnStatement

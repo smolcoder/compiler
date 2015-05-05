@@ -5,6 +5,14 @@ class CodeLinkerListener(BaseASTListener):
     def __init__(self):
         self.code = []
 
+    def visitTerminal(self, ast):
+        if hasattr(ast, 'code_before'):
+            self.code += ast.code_before
+        if hasattr(ast, 'code'):
+            self.code += ast.code
+        if hasattr(ast, 'code_after'):
+            self.code += ast.code_after
+
     def enterEvery(self, ast):
         if hasattr(ast, 'code_before'):
             self.code += ast.code_before
@@ -147,14 +155,22 @@ class ExpressionTADListener(BaseASTListener):
         block.code_before = [testLabel(l)]
         block.code_after = [goto(ast.parent.endLabel), label(l)]
 
+    def enterWhileStatement(self, ast):
+        ast.whileLabel = lg.nextLabel()
+        ast.endLabel = lg.nextLabel()
+
     def exitWhileStatement(self, ast):
         expr = ast.getFirstChild()
         block = ast.getLastChild()
-        whileLabel = lg.nextLabel()
-        endLabel = lg.nextLabel()
-        expr.code_before = [label(whileLabel)]
-        expr.code_after = [testLabel(endLabel)]
-        block.code_after = [goto(whileLabel), label(endLabel)]
+        expr.code_before = [label(ast.whileLabel)]
+        expr.code_after = [testLabel(ast.endLabel)]
+        block.code_after = [goto(ast.whileLabel), label(ast.endLabel)]
+
+    def visitBreak(self, ast):
+        ast.code = [goto(ast.getFirstParentByName('whileStatement').endLabel)]
+
+    def visitContinue(self, ast):
+        ast.code = [goto(ast.getFirstParentByName('whileStatement').whileLabel)]
 
 
 def recordAccessCode(ast):

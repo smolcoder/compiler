@@ -274,6 +274,42 @@ class LLangListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by LLangParser#breakStatement.
+    def enterBreakStatement(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#breakStatement.
+    def exitBreakStatement(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by LLangParser#breaks.
+    def enterBreaks(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#breaks.
+    def exitBreaks(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by LLangParser#continueStatement.
+    def enterContinueStatement(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#continueStatement.
+    def exitContinueStatement(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by LLangParser#continues.
+    def enterContinues(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#continues.
+    def exitContinues(self, ctx):
+        pass
+
+
     # Enter a parse tree produced by LLangParser#returnStatement.
     def enterReturnStatement(self, ctx):
         pass

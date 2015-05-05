@@ -14,6 +14,15 @@ class ASTNode:
         self.env = None
         self.globalEnv = None
 
+    def getFirstParentByName(self, name, itself=False):
+        if itself and self.name == name:
+            return self
+        parent = self.parent
+        while parent:
+            if parent.name == name:
+                return parent
+            parent = parent.parent
+
     def __str__(self):
         return self.name + str(self.source) + ('[{}]'.format(getattr(self, 'type')) if hasattr(self, 'type') else '')
 
@@ -56,6 +65,9 @@ class TerminalASTNode(ASTNode):
     def __init__(self, name, source, value):
         ASTNode.__init__(self, name, source)
         self.value = value
+
+    def filterByName(self, name):
+        return ASTNode.filterByName(self, name)
 
     def getDeepest(self):
         return self

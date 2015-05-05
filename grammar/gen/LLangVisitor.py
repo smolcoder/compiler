@@ -155,6 +155,26 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by LLangParser#breakStatement.
+    def visitBreakStatement(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by LLangParser#breaks.
+    def visitBreaks(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by LLangParser#continueStatement.
+    def visitContinueStatement(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by LLangParser#continues.
+    def visitContinues(self, ctx):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by LLangParser#returnStatement.
     def visitReturnStatement(self, ctx):
         return self.visitChildren(ctx)

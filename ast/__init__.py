@@ -125,6 +125,12 @@ class ASTBuildListener(LLangListener):
         for c in ctx.ast.getChildren():
             ctx.ast.typeName.append(c.typeName)
 
+    def exitBreakStatement(self, ctx):
+        ctx.ast = TerminalASTNode('Break', ctx.ast.source, 'break')
+
+    def exitContinueStatement(self, ctx):
+        ctx.ast = TerminalASTNode('Continue', ctx.ast.source, 'continue')
+
     def enterVariableDeclaration(self, ctx):
         ctx.ast = VariableDeclarationASTNode('variableDeclaration', getSource(ctx))
         ctx.ast.parent = ctx.parentCtx.ast
