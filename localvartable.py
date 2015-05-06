@@ -13,7 +13,9 @@ class LocalVariableTable:
         self.table[name] = {
             'number': self.counter,
             'type': _type,
-            'ast': ast}
+            'ast': ast,
+            'name': name
+        }
         self.reversed_table[self.counter] = name
         self.counter += 1
         return name

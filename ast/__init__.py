@@ -197,6 +197,7 @@ class ASTWalker:
                 self.walk(listener, c, *args, **kwargs)
         self.exitNode(listener, ast, *args, **kwargs)
 
+    # todo refactoring
     def enterNode(self, listener, ast, *args, **kwargs):
         listener.enterEvery(ast, *args, **kwargs)
         cls = self.buildEnterName(ast.__class__.__name__)

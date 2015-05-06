@@ -17,7 +17,7 @@ class TypeCheckListener(BaseASTListener):
         name = ast.getFirstChild().value
         functionInfo = self.env.resolveFunction(name)
         if functionInfo:
-            ast.type = functionInfo['ast'].getReturnType()
+            ast.type = functionInfo['ast'].getFirstChild().getReturnType()
         else:
             raise Exception("Existence listener skipped this case!")
 

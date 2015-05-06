@@ -40,6 +40,13 @@ class ASTNode:
             self.globalEnv = self.parent.getGlobalEnv()
         return self.globalEnv
 
+    def getLVT(self):
+        if hasattr(self, 'lvt'):
+            return self.lvt
+        if self.parent:
+            return self.parent.getLVT()
+        return getattr(self, 'lvt', None)
+
     def getEnv(self):
         if self.env is not None:
             return self.env

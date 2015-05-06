@@ -45,7 +45,7 @@ class Env:
     def generateLocalVariableTable(self):
         lvt = LocalVariableTable()
         for v in self.varOrder:
-            lvt.put(v)
+            lvt.put(v, _type=self.variables[v]['type'], ast=self.variables[v]['ast'])
         return lvt
 
 
@@ -59,7 +59,7 @@ class GlobalEnv(Env):
         name = ast.getName()
         if name in self.functions or name in self.records or self.isBuildIn(name):
             return False
-        self.functions[name] = {'type': ast.getReturnType(), 'args': ast.getArguments(), 'ast': ast}
+        self.functions[name] = {'type': ast.getReturnType(), 'args': ast.getArguments(), 'ast': ast.parent}
         return True
 
     def putRecord(self, ast):
@@ -134,3 +134,13 @@ def buildEnv(ast):
     listener = BuildEnvListener()
     walkAST(listener, ast)
     return listener.globalEnv, listener.errors
+
+
+def makeVariableTables(ast):
+    block = ast.getJustBlock()
+    ast.lvt = ast.env.generateLocalVariableTable()
+    if block:
+        block.lvt = block.getEnv().generateLocalVariableTable()
+    for name in ast.env.functions:
+        a = ast.env.resolveFunction(name)['ast']
+        a.lvt = ast.env.generateLocalVariableTable()

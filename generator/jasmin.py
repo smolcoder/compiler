@@ -1,5 +1,6 @@
+from ast import BaseASTListener
 from localvartable import LocalVariableTable
-from tad import *
+from middlecode import *
 
 
 class JasminBase:
@@ -45,18 +46,19 @@ class JasminBase:
     def astore(self, const):
         return self._arg_opt_command('astore', const)
 
-    def pushBool(self, value):
-        if value in ['0', 0, 'false']:
-            return ['iconst_0']
-        return ['iconst_1']
-
     def invokestatic(self, ast):
         return ''
 
     def push_const(self, const):
-        if const in [0, 1, 2, 3, 4, 5]:
-            return 'iconst_{}'.format(const)
-        return 'ldc {}'.format(const)
+        if const in ['0', '1', '2', '3', '4', '5']:
+            return ['iconst_{}'.format(const)]
+        if const in ['true', 'false']:
+            return ['iconst_0' if const == 'false' else 'iconst_1']
+        try:
+            int(const)
+            return ['ldc {}'.format(const)]
+        except:
+            return ['ldc "{}"'.format(const)]
 
     @property
     def strType(self):
@@ -74,22 +76,28 @@ class ExpressionJasmin(JasminBase):
         self.tad = tad
         self.lvt = lvt
         self.bytecode = []
-        self.parseLines()
 
-    def parseThreeAD(self, tad):
+    def processThreeAD(self, tad):
         pass
 
-    def parseTwoAD(self, tad):
+    def processTwoAD(self, tad):
+        if isinstance(tad.t2, Const):
+            self.bytecode += tad.t2.getByteCode()
+
+    def processTwoADOp(self, tad):
         pass
 
-    def parseTwoADOp(self, tad):
-        pass
-
-    def parseLines(self):
+    def processLines(self):
         for l in self.tad:
-            if isinstance(l, ThreeAD):
-                self.parseThreeAD(l)
-            if isinstance(l, TwoAD):
-                self.parseTwoAD(l)
-            if isinstance(l, TwoADOp):
-                self.parseTwoADOp(l)
+            methodName = 'process{}'.format(l.__class__.__name__)
+            if hasattr(self, methodName):
+                getattr(self, methodName)(l)
+
+
+class MainGenListener(BaseASTListener):
+    def __init__(self, rootAst):
+        self.bytecode = []
+        self.gEnv = rootAst.getGlovalEnv()
+        self.gvt = rootAst.lvt
+
+    # def

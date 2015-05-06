@@ -1,8 +1,8 @@
 from ast import BaseASTListener, walkAST, CYCLES, NonTerminalASTNode
-from tad import *
+from middlecode import *
 
 
-class TADLinker:
+class MiddleCodeLinker:
     def __init__(self):
         self.code = []
 
@@ -44,7 +44,7 @@ class TADLinker:
 
 
 def linkCode(ast):
-    linker = TADLinker()
+    linker = MiddleCodeLinker()
     linker.link(ast)
     return linker.code
 
@@ -52,31 +52,23 @@ def linkCode(ast):
 class NameGenerator:
     counter = 0
 
-    def nextName(self):
-        var = 't{}'.format(self.counter)
+    def nextName(self, _type):
+        var = '__t{}'.format(self.counter)
         self.counter += 1
-        return var
+        return Variable(var, _type)
 
 
 class LabelGenerator:
     counter = 0
 
     def nextLabel(self):
-        var = '__Label_{}'.format(self.counter)
+        var = 'Label_{}'.format(self.counter)
         self.counter += 1
         return var
 
 
 ng = NameGenerator()
 lg = LabelGenerator()
-
-
-def locvar(var):
-    return 'loc.{}'.format(var)
-
-
-def const(var):
-    return 'const.{}'.format(var)
 
 
 class ExpressionTADListener(BaseASTListener):
@@ -89,61 +81,57 @@ class ExpressionTADListener(BaseASTListener):
         op = ast.getOperator().value if ast.getOperator() else None
 
         if fc.name == 'literal':
-            if fc.getFirstChild().name == 'StrLiteral':
-                ast.var = ng.nextName()
-                ast.code = [TwoAD(ast.var, const('"{}"'.format(fc.getFirstChild().value)))]
-            else:
-                ast.var = const(ast.getDeepest().value)
+            ast.var = ng.nextName(ast.type)
+            resType = fc.getFirstChild().type
+            ast.code = [TwoAC(ast.var, Const(ast.getDeepest().value, resType), resType)]
+
         elif fc.name == 'leftHandSide':
             ast.var = fc.var
         elif fc.name == 'functionInvocation':
             ast.var = fc.var
         elif op:
-            ast.var = ng.nextName()
+            ast.var = ng.nextName(ast.type)
             if ast.isUnaryOperation():
-                ast.code = [TwoADOp(ast.name, op, ast.getLastChild().var)]
+                ast.code = [TwoACOp(ast.var, op, ast.getLastChild().var, ast.type)]
             else:
                 left = fc.var
                 right = ast.getLastChild().var
-                ast.code = [ThreeAD(ast.var, left, op, right)]
+                ast.code = [ThreeAC(ast.var, left, op, right, ast.type)]
         elif fc.name == 'recordInitializer':
             ast.var = fc.var
 
     def exitFunctionInvocation(self, ast):
-        ast.var = ng.nextName()
-        args = []
-        for c in ast.getLastChild().getChildren():
-            args.append(c.var)
-        ast.code = [CallFunction(ast.var, ast.getFirstChild().value, args)]
+        ast.var = ng.nextName(ast.type)
+        ast.code = [CallFunction(ast.var, ast.getFirstChild().value)]
 
     def enterRecordInitializer(self, ast):
-        ast.var = ng.nextName()
+        ast.var = ng.nextName(ast.type)
+        ast.code_before = [NewRecord(ast.getFirstChild().value)]
 
     def exitRecordInitializer(self, ast):
-        recordName = ast.getFirstChild().value
-        vars = [f.getLastChild().var for f in ast.getLastChild().getChildren()]
-        ast.code = [CreateRecord(ast.var, recordName, vars)]
+        types = [f.getLastChild().type for f in ast.getLastChild().getChildren()]
+        ast.code = [CreateRecord(ast.var, ast.getFirstChild().value, types)]
 
     def exitLeftHandSide(self, ast):
         fc = ast.getFirstChild()
         if fc.name == 'Identifier':
-            ast.var = locvar(fc.value)
+            ast.var = Variable(fc.value, ast.type, status='loc')
         elif fc.name == 'recordFieldAccess':
-            ast.var = recordAccessCode(fc)
+            ast.var = Variable(recordAccessCode(fc), ast.type, status='loc')
 
     def exitAssignment(self, ast):
         left = ast.getFirstChild().var
         op = ast.getChild(1).value
         right = ast.getLastChild().var
         if op in ['+=', '-=', '/=', '%=']:
-            ast.code = [ThreeAD(left, left, op[0], right)]
+            ast.code = [ThreeAC(left, left, op[0], right, ast.getFirstChild().type)]
         else:
-            ast.code = [TwoAD(left, right)]
+            ast.code = [TwoAC(left, right, ast.getFirstChild().type)]
 
     def exitVariableDeclaration(self, ast):
         expr = ast.getLastChild()
         if expr.name == 'expression':
-            ast.code = [TwoAD(locvar(ast.getChild(1).value), expr.var)]
+            ast.code = [TwoAC(Variable(ast.getChild(1).value, expr.type, status='loc'), expr.var, expr.type)]
 
     def enterIf(self, ast):
         ast.endLabel = lg.nextLabel()
@@ -199,13 +187,10 @@ class ExpressionTADListener(BaseASTListener):
     def exitForUpdate(self, ast):
         ast.code_after = [GoTo(ast.parent.startLabel)]
 
-    def exitFunctionSignature(self, ast):
-        ast.code_before = ['.start {} ({}):{}'.format(
-            ast.getName(),
-            ','.join([t for n, t in ast.getArguments()]),
-            ast.getReturnType()
-        )]
-        ast.code_after = ['.end {}'.format(ast.getName())]
+    def exitFunctionDeclaration(self, ast):
+        name = ast.getFirstChild().getName()
+        ast.code_before = ['.start {}'.format(name)]
+        ast.code_after = ['.end {}'.format(name)]
 
     def exitProgramme(self, ast):
         block = ast.getJustBlock()
@@ -219,10 +204,10 @@ def recordAccessCode(ast):
     if fc.name == 'Identifier':
         ast.var = fc.value
         return ast.var
-    ast.var = ng.nextName()
+    ast.var = ng.nextName(ast.type)
     sc = ast.getLastChild()
     leftVar = recordAccessCode(fc)
-    ast.code = [ThreeAD(ast.var, leftVar, '->', sc.value)]
+    ast.code = [ThreeAC(ast.var, leftVar, '->', sc.value, ast.type)]
     return ast.var
 
 
