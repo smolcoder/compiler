@@ -1,11 +1,11 @@
 from antlr4 import FileStream
 from ast import pprintAST
 from compiler import Compiler
-from generator import recordAccessCode, linkCode, makeTAD
-from semantic.optimizations import precalculateConstants
 
 # todo add checking for break and continue
 # todo  make any semantic checking abstract
+from generator import makeTAD
+
 
 def main():
     compiler = Compiler()

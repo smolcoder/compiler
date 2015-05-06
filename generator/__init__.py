@@ -1,33 +1,51 @@
-from ast import BaseASTListener, walkAST
+from ast import BaseASTListener, walkAST, CYCLES, NonTerminalASTNode
 
 
-class CodeLinkerListener(BaseASTListener):
+class TADLinker:
     def __init__(self):
         self.code = []
 
-    def visitTerminal(self, ast):
-        if hasattr(ast, 'code_before'):
-            self.code += ast.code_before
-        if hasattr(ast, 'code'):
-            self.code += ast.code
-        if hasattr(ast, 'code_after'):
-            self.code += ast.code_after
-
-    def enterEvery(self, ast):
+    def getCodeBefore(self, ast):
         if hasattr(ast, 'code_before'):
             self.code += ast.code_before
 
-    def exitEvery(self, ast):
-        if hasattr(ast, 'code'):
-            self.code += ast.code
+    def getCodeAfter(self, ast):
         if hasattr(ast, 'code_after'):
             self.code += ast.code_after
+
+    def getCode(self, ast):
+        if hasattr(ast, 'code'):
+            self.code += ast.code
+
+    def linkChildren(self, ast):
+        if isinstance(ast, NonTerminalASTNode):
+            for c in ast.getChildren():
+                self.link(c)
+
+    def linkForStatement(self, ast):
+        forInit = ast.getFirstChildByName('forInit')
+        forCondition = ast.getFirstChildByName('forCondition')
+        forUpdate = ast.getFirstChildByName('forUpdate')
+        forBlock = ast.getLastChild()
+        self.link(forInit)
+        self.link(forCondition)
+        self.link(forBlock)
+        self.link(forUpdate)
+
+    def link(self, ast):
+        self.getCodeBefore(ast)
+        if ast.name == 'forStatement':
+            self.linkForStatement(ast)
+        else:
+            self.linkChildren(ast)
+            self.getCode(ast)
+        self.getCodeAfter(ast)
 
 
 def linkCode(ast):
-    l = CodeLinkerListener()
-    walkAST(l, ast)
-    return l.code
+    linker = TADLinker()
+    linker.link(ast)
+    return linker.code
 
 
 class NameGenerator:
@@ -99,17 +117,13 @@ class ExpressionTADListener(BaseASTListener):
                 left = fc.var
                 right = ast.getLastChild().var
                 ast.code = [threeAC(ast.var, left, op, right)]
-        # else:
-        #     print fc.name
-        # else:
-        #     ast.code
 
     def exitFunctionInvocation(self, ast):
         ast.var = ng.nextName()
         args = []
         for c in ast.getLastChild().getChildren():
             args.append(c.var)
-        ast.code = [twoAC(ast.var, 'invoke', '{}({})'.format(ast.getFirstChild().value, ','.join(args)))]
+        ast.code = [twoAC(ast.var, 'call', '{} {} '.format(ast.getFirstChild().value, ' '.join(args)))]
 
     def exitLeftHandSide(self, ast):
         fc = ast.getFirstChild()
@@ -122,10 +136,10 @@ class ExpressionTADListener(BaseASTListener):
         left = ast.getFirstChild().var
         op = ast.getChild(1).value
         right = ast.getLastChild().var
-        if op in ['+=, -=, /=', '%=']:
-            ast.code = [threeAC(left, left, op[1], right)]
+        if op in ['+=', '-=', '/=', '%=']:
+            ast.code = [threeAC(left, left, op[0], right)]
         else:
-            ast.code = [twoAC(left, op, right)]
+            ast.code = [oneAC(left, right)]
 
     def exitVariableDeclaration(self, ast):
         expr = ast.getLastChild()
@@ -156,21 +170,49 @@ class ExpressionTADListener(BaseASTListener):
         block.code_after = [goto(ast.parent.endLabel), label(l)]
 
     def enterWhileStatement(self, ast):
-        ast.whileLabel = lg.nextLabel()
+        ast.startLabel = lg.nextLabel()
         ast.endLabel = lg.nextLabel()
 
     def exitWhileStatement(self, ast):
         expr = ast.getFirstChild()
         block = ast.getLastChild()
-        expr.code_before = [label(ast.whileLabel)]
+        expr.code_before = [label(ast.startLabel)]
         expr.code_after = [testLabel(ast.endLabel)]
-        block.code_after = [goto(ast.whileLabel), label(ast.endLabel)]
+        block.code_after = [goto(ast.startLabel), label(ast.endLabel)]
 
     def visitBreak(self, ast):
-        ast.code = [goto(ast.getFirstParentByName('whileStatement').endLabel)]
+        ast.code = [goto(ast.getFirstParentByName(CYCLES).endLabel)]
 
     def visitContinue(self, ast):
-        ast.code = [goto(ast.getFirstParentByName('whileStatement').whileLabel)]
+        ast.code = [goto(ast.getFirstParentByName(CYCLES).startLabel)]
+
+    def enterForStatement(self, ast):
+        ast.startLabel = lg.nextLabel()
+        ast.endLabel = lg.nextLabel()
+
+    def exitForStatement(self, ast):
+        ast.code_after = [label(ast.endLabel)]
+
+    def exitForCondition(self, ast):
+        ast.code_before = [label(ast.parent.startLabel)]
+        ast.code_after = [testLabel(ast.parent.endLabel)]
+
+    def exitForUpdate(self, ast):
+        ast.code_after = [goto(ast.parent.startLabel)]
+
+    def exitFunctionSignature(self, ast):
+        ast.code_before = ['.start {} ({}):{}'.format(
+            ast.getName(),
+            ','.join([t for n, t in ast.getArguments()]),
+            ast.getReturnType()
+        )]
+        ast.code_after = ['.end {}'.format(ast.getName())]
+
+    def exitProgramme(self, ast):
+        block = ast.getJustBlock()
+        if block:
+            block.code_before = ['.start main']
+            block.code_after = ['.end main']
 
 
 def recordAccessCode(ast):
@@ -181,7 +223,7 @@ def recordAccessCode(ast):
     ast.var = ng.nextName()
     sc = ast.getLastChild()
     leftVar = recordAccessCode(fc)
-    ast.code = [threeAC(ast.var, leftVar, 'access', sc.value)]
+    ast.code = [threeAC(ast.var, leftVar, '->', sc.value)]
     return ast.var
 
 

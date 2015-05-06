@@ -157,7 +157,7 @@ whileStatement
     ;
 
 forStatement
-    : FOR '(' forInit? ';' forCondition? ';' forUpdate? ')' block
+    : FOR '(' forInit ';' forCondition ';' forUpdate ')' block
     ;
 
 forInit

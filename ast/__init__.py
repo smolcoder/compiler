@@ -40,6 +40,9 @@ OPERATORS = [
 ]
 
 
+CYCLES = ['whileStatement', 'forStatement']
+
+
 # Builds AST node for each state context,
 # binds it to the context (via making ast field)
 class ASTBuildListener(LLangListener):

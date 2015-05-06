@@ -14,12 +14,14 @@ class ASTNode:
         self.env = None
         self.globalEnv = None
 
-    def getFirstParentByName(self, name, itself=False):
-        if itself and self.name == name:
+    def getFirstParentByName(self, names, itself=False):
+        if isinstance(names, str):
+            names = [names]
+        if itself and self.name in names:
             return self
         parent = self.parent
         while parent:
-            if parent.name == name:
+            if parent.name in names:
                 return parent
             parent = parent.parent
 
