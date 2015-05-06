@@ -14,7 +14,7 @@ def main():
         result.printErrors()
     else:
         ast = result.ast
-        print '\n'.join(makeTAD(ast))
-        # pprintAST(ast)
+        # print '\n'.join(makeTAD(ast))
+        pprintAST(ast)
 
 main()

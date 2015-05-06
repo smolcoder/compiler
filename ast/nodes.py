@@ -216,10 +216,12 @@ class OperatorASTNode(TerminalASTNode):
         a1 = args[0]
         a2 = args[1] if len(args) > 1 else None
 
-        if op == '!':
-            return fromBool(not toBool(a1))
-        if op == '-':
-            return str(-int(a1))
+        if self.name == 'UnaryOperator':
+            if op == '!':
+                return fromBool(not toBool(a1))
+            if op == '-':
+                return str(-int(a1))
+            return None
 
         if op == '+':
             return str(int(a1) + int(a2))
@@ -252,7 +254,6 @@ class OperatorASTNode(TerminalASTNode):
             return fromBool(toBool(a1) or toBool(a2))
         if op == '&&':
             return fromBool(toBool(a1) and toBool(a2))
-
 
 
 class ProgrammeASTNode(NonTerminalASTNode):

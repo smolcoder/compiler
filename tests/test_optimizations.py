@@ -17,3 +17,4 @@ class OptimizationTestCase(BaseTestCase):
         self.assertEqual(literals[0].value, '1')
 
         self.assertHasError('{Int i = 1 / 0;}')
+        self.assertHasError('{Int i = 1 / (1 - 1);}')
