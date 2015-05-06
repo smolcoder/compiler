@@ -9,7 +9,7 @@ class Env:
     def __init__(self, ast):
         self.ast = ast
         self.variables = {}  # variables (name, type)
-        self.seq_var = []
+        self.varOrder = []
         self.build_ins = {
             'readln': {'returnType': 'None'},
             'writeln': {'returnType': 'None'},
@@ -22,7 +22,7 @@ class Env:
         if name in self.variables:
             return False
         self.variables[name] = {'type': _type, 'ast': ast}
-        self.seq_var.append(name)
+        self.varOrder.append(name)
         return True
 
     def _resolveName(self, name, whereStr):
@@ -44,7 +44,7 @@ class Env:
 
     def generateLocalVariableTable(self):
         lvt = LocalVariableTable()
-        for v in self.seq_var:
+        for v in self.varOrder:
             lvt.put(v)
         return lvt
 
@@ -87,6 +87,9 @@ class BuildEnvListener(BaseASTListener):
         self.globalEnv = ast.env
         self.stack.push(ast.env)
 
+    def exitProgramme(self, ast):
+        self.stack.pop()
+
     def enterJustBlock(self, ast):
         ast.env = Env(ast)
         self.stack.push(ast.env)
@@ -94,30 +97,17 @@ class BuildEnvListener(BaseASTListener):
     def exitJustBlock(self, ast):
         self.stack.pop()
 
-    def enterWhileStatement(self, ast):
-        ast.env = Env(ast)
-        self.stack.push(ast.env)
-
-    def exitWhileStatement(self, ast):
-        self.stack.pop()
-
-    def enterForStatement(self, ast):
-        ast.env = Env(ast)
-        self.stack.push(ast.env)
-
-    def exitForStatement(self, ast):
-        self.stack.pop()
-
     def enterRecordBody(self, ast):
         ast.env = Env(ast)
+        self.stack.push(ast.env)
         if not self.globalEnv.putRecord(ast):
             self.errors.append(NameAlreadyDefinedError(ast.left.value, ast.left.source))
-        self.stack.push(ast.env)
 
     def enterVariableDeclaration(self, ast):
         env = self.stack.top()
         if not env.putVariable(ast.getName(), ast.getType(), ast):
             self.errors.append(NameAlreadyDefinedError(ast.getName(), ast.source))
+        pass
 
     def exitRecordBody(self, ast):
         self.stack.pop()

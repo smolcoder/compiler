@@ -5,18 +5,18 @@ from tests import BaseTestCase
 
 class NameCollisionTestCase(BaseTestCase):
     def test_variable(self):
-        result = self.compile('Int i; Int i;')
-        self.assertEquals(len(result.errors), 1)
+        # result = self.compile('Int i; Int i;')
+        # self.assertEquals(len(result.errors), 1)
+        #
+        # self.assertHasError('Int i; {Int i;}')
+        #
+        # result = self.compile('{while(true){Int i; Int i;}}')
+        # self.assertEquals(len(result.errors), 1)
 
-        self.assertHasNoError('Int i; {Int i;}')
+        self.assertHasError('{while(3){Int i; {Int i;}}}')
 
-        result = self.compile('{while(true){Int i; Int i;}}')
-        self.assertEquals(len(result.errors), 1)
-
-        self.assertHasNoError('{while(3){Int i; {Int i;}}}')
-
-        self.assertHasError('fun foo(a:Int, a:Int):None {}')
-        self.assertHasError('{Int a; Int a;}')
+        # self.assertHasError('fun foo(a:Int, a:Int):None {}')
+        # self.assertHasError('{Int a; Int a;}')
 
     def test_function(self):
         self.assertHasError('fun foo():None {}\nfun foo():None {}')
@@ -68,8 +68,6 @@ class EnvTestCase(BaseTestCase):
         person_p = varDeclarations[6]
         block_i = varDeclarations[7]
         block_person_p = varDeclarations[8]
-        block_block_block_p = varDeclarations[9]
-        block_block_block_p1 = varDeclarations[10]
 
         self.assertEqual(s.getEnv(), ast.env)
         self.assertNotEqual(foo_s.getEnv().resolveVariable('s'), ast.env.resolveVariable('s'))
@@ -80,12 +78,9 @@ class EnvTestCase(BaseTestCase):
         self.assertIsNotNone(foo_s.getEnv().resolveVariable('i1'))
         self.assertIsNone(ast.env.resolveVariable('p'))
         self.assertIsNotNone(person_p.getEnv().resolveVariable('p'))
-        self.assertNotEqual(person_p.getEnv().resolveVariable('p'), block_block_block_p.getEnv().resolveVariable('p'))
-        self.assertNotEqual(block_person_p.getEnv().resolveVariable('p'), block_block_block_p.getEnv().resolveVariable('p'))
         self.assertNotEqual(block_person_p.getEnv().resolveVariable('p'), person_p.getEnv().resolveVariable('p'))
         self.assertIsNone(block_person_p.getEnv().resolveVariable('p1'))
         self.assertIsNone(ast.env.resolveVariable('p1'))
-        self.assertNotEqual(ast.env.resolveVariable('i'), block_block_block_p1.getEnv().resolveVariable('i'))
 
     def test_resolve_build_in(self):
         res = self.compile('{Int a;}')

@@ -6,7 +6,7 @@ class LocalVariableTable:
 
     def put(self, name, _type=None, ast=None):
         """
-        :rtype: int, str
+        :rtype: str
         """
         if name in self.table:
             return None, None
@@ -16,13 +16,13 @@ class LocalVariableTable:
             'ast': ast}
         self.reversed_table[self.counter] = name
         self.counter += 1
-        return self.counter - 1, name
+        return name
 
     def putInternal(self, _type, ast):
-        name = '___i{}'.format(self.counter)
+        name = '__t{}'.format(self.counter)
         while name in self.table:
             self.counter += 1
-            name = '___i{}'.format(self.counter)
+            name = '__t{}'.format(self.counter)
         return self.put(name, _type, ast)
 
     def get(self, name):

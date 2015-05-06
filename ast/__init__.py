@@ -138,6 +138,9 @@ class ASTBuildListener(LLangListener):
         ctx.ast = VariableDeclarationASTNode('variableDeclaration', getSource(ctx))
         ctx.ast.parent = ctx.parentCtx.ast
 
+    def exitRecordFieldInitializer(self, ctx):
+        ctx.ast.removeChild(1)
+
     def visitTerminal(self, node):
         symbol = node.symbol
         text = symbol.text

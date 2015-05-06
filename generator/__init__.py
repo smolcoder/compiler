@@ -1,4 +1,5 @@
 from ast import BaseASTListener, walkAST, CYCLES, NonTerminalASTNode
+from tad import *
 
 
 class TADLinker:
@@ -70,41 +71,29 @@ ng = NameGenerator()
 lg = LabelGenerator()
 
 
-def threeAC(var, left, op, right):
-    return '{} := {} {} {}'.format(var, left, op, right)
+def locvar(var):
+    return 'loc.{}'.format(var)
 
 
-def twoAC(var, op, arg):
-    return '{} := {} {}'.format(var, op, arg)
-
-
-def oneAC(var, arg):
-    return '{} := {}'.format(var, arg)
-
-
-def testLabel(label=None):
-    return 'test {}'.format(label or lg.nextLabel())
-
-
-def goto(label):
-    return 'goto {}'.format(label)
-
-
-def label(l):
-    return '{}:'.format(l)
+def const(var):
+    return 'const.{}'.format(var)
 
 
 class ExpressionTADListener(BaseASTListener):
+    def __init__(self, globalEnv):
+        self.globalEnv = globalEnv
+
     def exitExpression(self, ast):
+        # todo refactoring is needed
         fc = ast.getFirstChild()
         op = ast.getOperator().value if ast.getOperator() else None
 
         if fc.name == 'literal':
             if fc.getFirstChild().name == 'StrLiteral':
                 ast.var = ng.nextName()
-                ast.code = [oneAC(ast.var, '"{}"'.format(fc.getFirstChild().value))]
+                ast.code = [TwoAD(ast.var, const('"{}"'.format(fc.getFirstChild().value)))]
             else:
-                ast.var = ast.getDeepest().value
+                ast.var = const(ast.getDeepest().value)
         elif fc.name == 'leftHandSide':
             ast.var = fc.var
         elif fc.name == 'functionInvocation':
@@ -112,23 +101,33 @@ class ExpressionTADListener(BaseASTListener):
         elif op:
             ast.var = ng.nextName()
             if ast.isUnaryOperation():
-                ast.code = [twoAC(ast.name, op, ast.getLastChild().var)]
+                ast.code = [TwoADOp(ast.name, op, ast.getLastChild().var)]
             else:
                 left = fc.var
                 right = ast.getLastChild().var
-                ast.code = [threeAC(ast.var, left, op, right)]
+                ast.code = [ThreeAD(ast.var, left, op, right)]
+        elif fc.name == 'recordInitializer':
+            ast.var = fc.var
 
     def exitFunctionInvocation(self, ast):
         ast.var = ng.nextName()
         args = []
         for c in ast.getLastChild().getChildren():
             args.append(c.var)
-        ast.code = [twoAC(ast.var, 'call', '{} {} '.format(ast.getFirstChild().value, ' '.join(args)))]
+        ast.code = [CallFunction(ast.var, ast.getFirstChild().value, args)]
+
+    def enterRecordInitializer(self, ast):
+        ast.var = ng.nextName()
+
+    def exitRecordInitializer(self, ast):
+        recordName = ast.getFirstChild().value
+        vars = [f.getLastChild().var for f in ast.getLastChild().getChildren()]
+        ast.code = [CreateRecord(ast.var, recordName, vars)]
 
     def exitLeftHandSide(self, ast):
         fc = ast.getFirstChild()
         if fc.name == 'Identifier':
-            ast.var = fc.value
+            ast.var = locvar(fc.value)
         elif fc.name == 'recordFieldAccess':
             ast.var = recordAccessCode(fc)
 
@@ -137,14 +136,14 @@ class ExpressionTADListener(BaseASTListener):
         op = ast.getChild(1).value
         right = ast.getLastChild().var
         if op in ['+=', '-=', '/=', '%=']:
-            ast.code = [threeAC(left, left, op[0], right)]
+            ast.code = [ThreeAD(left, left, op[0], right)]
         else:
-            ast.code = [oneAC(left, right)]
+            ast.code = [TwoAD(left, right)]
 
     def exitVariableDeclaration(self, ast):
         expr = ast.getLastChild()
         if expr.name == 'expression':
-            ast.code = [oneAC(ast.getChild(1).value, expr.var)]
+            ast.code = [TwoAD(locvar(ast.getChild(1).value), expr.var)]
 
     def enterIf(self, ast):
         ast.endLabel = lg.nextLabel()
@@ -153,21 +152,21 @@ class ExpressionTADListener(BaseASTListener):
         block = ast.getBlockIfTrue()
 
         if not ast.getElifs() and not ast.getElse():
-            block.code_before = [testLabel(ast.endLabel)]
-            block.code_after = [label(ast.endLabel)]
+            block.code_before = [TestCondition(ast.endLabel)]
+            block.code_after = [Label(ast.endLabel)]
         else:
             l = lg.nextLabel()
-            block.code_before = [testLabel(l)]
-            block.code_after = [goto(ast.endLabel), label(l)]
+            block.code_before = [TestCondition(l)]
+            block.code_after = [GoTo(ast.endLabel), Label(l)]
 
     def exitElse(self, ast):
-        ast.code_after = [label(ast.parent.endLabel)]
+        ast.code_after = [Label(ast.parent.endLabel)]
 
     def exitElif(self, ast):
         block = ast.getBlock()
         l = lg.nextLabel()
-        block.code_before = [testLabel(l)]
-        block.code_after = [goto(ast.parent.endLabel), label(l)]
+        block.code_before = [TestCondition(l)]
+        block.code_after = [GoTo(ast.parent.endLabel), TestCondition(l)]
 
     def enterWhileStatement(self, ast):
         ast.startLabel = lg.nextLabel()
@@ -176,29 +175,29 @@ class ExpressionTADListener(BaseASTListener):
     def exitWhileStatement(self, ast):
         expr = ast.getFirstChild()
         block = ast.getLastChild()
-        expr.code_before = [label(ast.startLabel)]
-        expr.code_after = [testLabel(ast.endLabel)]
-        block.code_after = [goto(ast.startLabel), label(ast.endLabel)]
+        expr.code_before = [Label(ast.startLabel)]
+        expr.code_after = [TestCondition(ast.endLabel)]
+        block.code_after = [GoTo(ast.startLabel), Label(ast.endLabel)]
 
     def visitBreak(self, ast):
-        ast.code = [goto(ast.getFirstParentByName(CYCLES).endLabel)]
+        ast.code = [GoTo(ast.getFirstParentByName(CYCLES).endLabel)]
 
     def visitContinue(self, ast):
-        ast.code = [goto(ast.getFirstParentByName(CYCLES).startLabel)]
+        ast.code = [GoTo(ast.getFirstParentByName(CYCLES).startLabel)]
 
     def enterForStatement(self, ast):
         ast.startLabel = lg.nextLabel()
         ast.endLabel = lg.nextLabel()
 
     def exitForStatement(self, ast):
-        ast.code_after = [label(ast.endLabel)]
+        ast.code_after = [Label(ast.endLabel)]
 
     def exitForCondition(self, ast):
-        ast.code_before = [label(ast.parent.startLabel)]
-        ast.code_after = [testLabel(ast.parent.endLabel)]
+        ast.code_before = [Label(ast.parent.startLabel)]
+        ast.code_after = [TestCondition(ast.parent.endLabel)]
 
     def exitForUpdate(self, ast):
-        ast.code_after = [goto(ast.parent.startLabel)]
+        ast.code_after = [GoTo(ast.parent.startLabel)]
 
     def exitFunctionSignature(self, ast):
         ast.code_before = ['.start {} ({}):{}'.format(
@@ -223,11 +222,11 @@ def recordAccessCode(ast):
     ast.var = ng.nextName()
     sc = ast.getLastChild()
     leftVar = recordAccessCode(fc)
-    ast.code = [threeAC(ast.var, leftVar, '->', sc.value)]
+    ast.code = [ThreeAD(ast.var, leftVar, '->', sc.value)]
     return ast.var
 
 
 def makeTAD(ast):
-    l = ExpressionTADListener()
+    l = ExpressionTADListener(ast.getGlobalEnv())
     walkAST(l, ast)
     return linkCode(ast)

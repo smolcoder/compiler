@@ -315,6 +315,9 @@ class IfStatementASTNode(NonTerminalASTNode):
     def getElse(self):
         return self.getFirstChildByName('else')
 
+    def removeChildren(self):
+        NonTerminalASTNode.removeChildren(self)
+
     def getCondition(self):
         return self.getFirstChildByName('expression')
 

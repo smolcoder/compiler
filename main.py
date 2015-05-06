@@ -4,7 +4,7 @@ from compiler import Compiler
 
 # todo add checking for break and continue
 # todo  make any semantic checking abstract
-from generator import makeTAD
+from generator import makeTAD, linkCode
 
 
 def main():
@@ -14,7 +14,11 @@ def main():
         result.printErrors()
     else:
         ast = result.ast
-        # print '\n'.join(makeTAD(ast))
-        pprintAST(ast)
+        # e = ast.filterByName('statement')
+        # makeTAD(ast)
+        # for i in e:
+        #     print '\n'.join(linkCode(i))
+        print '\n'.join(map(str, makeTAD(ast)))
+        # pprintAST(ast)
 
 main()

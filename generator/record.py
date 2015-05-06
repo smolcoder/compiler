@@ -10,7 +10,7 @@ class RecordGenerator(JasminBase):
 
     def generate(self):
         env = self.ast.getEnv()
-        fields = [(name, env.resolveVariable(name)['type']) for name in env.variables]
+        fields = [(name, env.resolveVariable(name)['type']) for name in env.varOrder]
         inners = [self.recordName] + [t for _, t in fields if isRecord(t)]
 
         genFields = [self.field(n, t) for n, t in fields]
