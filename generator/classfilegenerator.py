@@ -1,5 +1,7 @@
 from generator.clinit import ClinitGenerator
 from generator.jasmin import JasminBaseGenerator
+from generator.statement import bodyGenerator
+from generator.writeln import generateWriteLn
 from utils import here
 
 
@@ -9,6 +11,7 @@ class ClassFileGenerator(JasminBaseGenerator):
         self.gEnv = rootAst.getGlobalEnv()
         self.gvt = rootAst.lvt
         self.className = className
+        self.mainBlock = self.ast.getJustBlock()
 
     def makeHead(self):
         return ['.class public {}', '.super java/lang/Object'.format(self.filename)]
@@ -22,6 +25,8 @@ class ClassFileGenerator(JasminBaseGenerator):
             bytecode += self.staticField(f, self.gEnv.resolveVariable(f)['type'])
         bytecode += self.comment('')
         bytecode += self.mainInit()
+        bytecode += self.comment('')
+        bytecode += generateWriteLn()
         bytecode += self.comment('')
         bytecode += self.main()
         bytecode += self.comment('')
@@ -54,12 +59,13 @@ class ClassFileGenerator(JasminBaseGenerator):
                            .end method""")
 
     def main(self):
-        template = """.method public static main([Ljava/lang/String;)V
-                      .limit stack 0
-                      .limit locals 1
-                      return
-                      .end method"""
-        return self.ss(template)
+        bk = ['.method public static main([Ljava/lang/String;)V',
+              '.limit stack 64',
+              '.limit locals 100']
+        main = bodyGenerator(self.mainBlock, self.gvt) if self.mainBlock else []
+        bk += main or ['return']
+        bk += ['.end method']
+        return bk
 
     def head(self):
         template = """.source {filename}.java

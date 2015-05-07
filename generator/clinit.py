@@ -1,23 +1,6 @@
-from generator.jasmin import JasminBaseGenerator
+from generator.jasmin import JasminBaseGenerator, GET_MNEMONIC_CMP, GET_MNEMONIC_ARITH
 from generator.linker import linkCode
 from middlecode import *
-
-GET_MNEMONIC_ARITH = {
-    '+': 'iadd',
-    '-': 'isub',
-    '*': 'imul',
-    '/': 'idiv',
-    '%': 'irem',
-    }
-
-GET_MNEMONIC_CMP = {
-    '<': 'if_icmplt',
-    '<=': 'if_icmple',
-    '>': 'if_icmpgt',
-    '>=': 'if_icmpge',
-    '!=': 'if_icmpne',
-    '==': 'if_icmpeq',
-}
 
 
 class ClinitGenerator(JasminBaseGenerator):
@@ -51,6 +34,13 @@ class ClinitGenerator(JasminBaseGenerator):
     def putStaticField(self, name, _type):
         return 'putstatic Main/{} {}'.format(name, self.getType(_type))
 
+    def pushIfLocalOrConst(self, var):
+        if isinstance(var, Const):
+            return self.push_const(var.value)
+        if var.status == 'loc':
+            return [self.getStaticField(var.name, var.type)]
+        return []
+
     def processLine(self, line):
         bytecode = []
         if isinstance(line, CreateRecord):
@@ -70,8 +60,9 @@ class ClinitGenerator(JasminBaseGenerator):
                 bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
             bytecode += ['getfield Main${}/{} {}'.format(line.t2.type, line.t3, self.getType(line.type))]
         elif isinstance(line, Push):
-            bytecode += [self.getStaticField(line.var.name, line.var.type)]
+            bytecode += self.pushIfLocalOrConst(line.var)
         elif isinstance(line, IfNeEq):
+            bytecode += self.pushIfLocalOrConst(line.var)
             bytecode += ['if{} {}'.format('ne' if line.op == '!=' else 'eq', line.label)]
         elif isinstance(line, Label):
             bytecode += self.label(line.label)
@@ -83,21 +74,18 @@ class ClinitGenerator(JasminBaseGenerator):
             if isinstance(line, TwoAC):
                 if isinstance(line.t2, Const):
                     bytecode += self.push_const(line.t2.value)
-                # elif isinstance(line.t2, Variable) and line.t2.status == 'loc':
-                #     bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
+                elif isinstance(line.t2, Variable):
+                    bytecode += self.pushIfLocalOrConst(line.t2)
             elif isinstance(line, TwoACOp):
                 op = line.op
-                # if line.t2.status == 'loc':
-                #     bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
+                bytecode += self.pushIfLocalOrConst(line.t2)
                 if op == '-':
                     bytecode += ['ineg']
                 elif op == '!':
                     bytecode += ['ineg']
             elif isinstance(line, ThreeAC):
-                # if line.t2.status == 'loc':
-                #     bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
-                # if line.t3.status == 'loc':
-                #     bytecode += [self.getStaticField(line.t3.name, line.t3.type)]
+                bytecode += self.pushIfLocalOrConst(line.t2)
+                bytecode += self.pushIfLocalOrConst(line.t3)
                 op = line.op
                 if op in GET_MNEMONIC_ARITH:
                     bytecode += [GET_MNEMONIC_ARITH[op]]

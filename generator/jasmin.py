@@ -26,8 +26,8 @@ class JasminBaseGenerator:
         return ['']
 
     def _arg_opt_command(self, cmd, const):
-        if const not in [0, 1, 2, 3]:
-            return ['{}} {}'.format(cmd, const)]
+        if const not in ['0', '1', '2', '3']:
+            return '{} {}'.format(cmd, const)
         return '{}_{}'.format(cmd, const)
 
     def iload(self, const):
@@ -39,6 +39,9 @@ class JasminBaseGenerator:
     def astore(self, const):
         return self._arg_opt_command('astore', const)
 
+    def istore(self, const):
+        return self._arg_opt_command('istore', const)
+
     def invokestatic(self, ast):
         return ''
 
@@ -48,7 +51,9 @@ class JasminBaseGenerator:
         if const in ['true', 'false']:
             return ['iconst_0' if const == 'false' else 'iconst_1']
         try:
-            int(const)
+            i = int(const)
+            if -128 <= i < 128:
+                return ['bipush {}'.format(const)]
             return ['ldc {}'.format(const)]
         except:
             return ['ldc "{}"'.format(const)]
@@ -62,3 +67,21 @@ class JasminBaseGenerator:
 
     def recType(self, rec):
         return 'LMain${};'.format(rec)
+
+
+GET_MNEMONIC_ARITH = {
+    '+': 'iadd',
+    '-': 'isub',
+    '*': 'imul',
+    '/': 'idiv',
+    '%': 'irem',
+    }
+
+GET_MNEMONIC_CMP = {
+    '>=': 'if_icmplt',
+    '>': 'if_icmple',
+    '<=': 'if_icmpgt',
+    '<': 'if_icmpge',
+    '==': 'if_icmpne',
+    '!=': 'if_icmpeq',
+    }

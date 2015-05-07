@@ -16,6 +16,7 @@ record R3 {
 Int i1 = 1;
 Int i2 = 1 + 3;
 Int i3 = (3 + i1) * i2 / i2 - i1;
+Int i4 = i2;
 
 Bool f1 = true;
 Bool f2 = f1 && false;
