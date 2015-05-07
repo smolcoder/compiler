@@ -58,6 +58,14 @@ class Push(MiddleCode):
         return '.push {}'.format(self.var)
 
 
+class PushBoolConst(MiddleCode):
+    def __init__(self, f):
+        self.f = f
+
+    def __str__(self):
+        return '.push {}'.format(self.f)
+
+
 class TestCondition(MiddleCode):
     def __init__(self, label):
         self.label = label
@@ -112,6 +120,16 @@ class AccessRecordField(MiddleCode):
         return '{} := {} -> {}'.format(self.t1, self.t2, self.t3)
 
 
+class IfNeEq(MiddleCode):
+    def __init__(self, var, label, op):
+        self.label = label
+        self.var = var
+        self.op = op
+
+    def __str__(self):
+        return '.if {} {} 0 goto {}'.format(self.var, self.op, self.label)
+
+
 class TACEntity:
     pass
 
@@ -150,7 +168,7 @@ class Variable(TACEntity):
         return self.status == 'loc'
 
     def __str__(self):
-        return '{}.{}[{}]'.format(self.status, self.name, self.type)
+        return '{}.{}'.format(self.status, self.name)
 
 
 class NameGenerator:
@@ -166,7 +184,7 @@ class LabelGenerator:
     counter = 0
 
     def nextLabel(self):
-        var = 'Label_{}'.format(self.counter)
+        var = 'Label{}'.format(self.counter)
         self.counter += 1
         return var
 
@@ -187,7 +205,7 @@ class BuildMiddleCodeListener(BaseASTListener):
         if fc.name == 'literal':
             ast.var = self.ng.nextVariable(ast.type)
             resType = fc.getFirstChild().type
-            ast.code = [TwoAC(ast.var, Const(ast.getDeepest().value, resType), resType)]
+            ast.addCode([TwoAC(ast.var, Const(ast.getDeepest().value, resType), resType)])
 
         elif fc.name == 'leftHandSide':
             if ast.parent.name in ['recordFieldInitializer', 'argumentList']:
@@ -195,31 +213,47 @@ class BuildMiddleCodeListener(BaseASTListener):
             else:
                 ast.var = fc.var
             if ast.var.status == 'loc':
-                ast.code = [Push(ast.var)]
+                ast.addCode([Push(ast.var)])
         elif fc.name == 'functionInvocation':
             ast.var = fc.var
         elif op:
             ast.var = self.ng.nextVariable(ast.type)
             if ast.isUnaryOperation():
-                ast.code = [TwoACOp(ast.var, op, ast.getLastChild().var, ast.type)]
+                ast.addCode([TwoACOp(ast.var, op, ast.getLastChild().var, ast.type)])
             else:
                 left = fc.var
                 right = ast.getLastChild().var
-                ast.code = [ThreeAC(ast.var, left, op, right, ast.type)]
+                if op in ['&&', '||']:
+                    lAst = fc
+                    rAst = ast.getLastChild()
+                    condLabel = LABEL_GENERATOR.nextLabel()
+                    endLabel = LABEL_GENERATOR.nextLabel()
+                    jmpOp = '==' if op == '&&' else '!='
+                    lAst.addCodeAfter([IfNeEq(left, condLabel, jmpOp)])
+                    rAst.addCodeAfter([IfNeEq(right, condLabel, jmpOp)])
+                    const1 = op == '&&'
+                    const2 = op == '||'
+                    ast.addCodeAfter([PushBoolConst(const1),
+                                      GoTo(endLabel),
+                                      Label(condLabel),
+                                      PushBoolConst(const2),
+                                      Label(endLabel)])
+                else:
+                    ast.addCode([ThreeAC(ast.var, left, op, right, ast.type)])
         elif fc.name == 'recordInitializer':
             ast.var = fc.var
 
     def exitFunctionInvocation(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
-        ast.code = [CallFunction(ast.var, ast.getFirstChild().value)]
+        ast.addCode([CallFunction(ast.var, ast.getFirstChild().value)])
 
     def enterRecordInitializer(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
-        ast.code_before = [NewRecord(ast.getFirstChild().value)]
+        ast.addCodeBefore([NewRecord(ast.getFirstChild().value)])
 
     def exitRecordInitializer(self, ast):
         types = [f.getLastChild().type for f in ast.getLastChild().getChildren()]
-        ast.code = [CreateRecord(ast.var, ast.getFirstChild().value, types)]
+        ast.addCode([CreateRecord(ast.var, ast.getFirstChild().value, types)])
 
     def exitLeftHandSide(self, ast):
         fc = ast.getFirstChild()
@@ -233,14 +267,14 @@ class BuildMiddleCodeListener(BaseASTListener):
         op = ast.getChild(1).value
         right = ast.getLastChild().var
         if op in ['+=', '-=', '/=', '%=']:
-            ast.code = [ThreeAC(left, left, op[0], right, ast.getFirstChild().type)]
+            ast.addCode([ThreeAC(left, left, op[0], right, ast.getFirstChild().type)])
         else:
-            ast.code = [TwoAC(left, right, ast.getFirstChild().type)]
+            ast.addCode([TwoAC(left, right, ast.getFirstChild().type)])
 
     def exitVariableDeclaration(self, ast):
         expr = ast.getLastChild()
         if expr.name == 'expression':
-            ast.code = [TwoAC(Variable(ast.getChild(1).value, expr.type, status='loc'), expr.var, expr.type)]
+            ast.addCode([TwoAC(Variable(ast.getChild(1).value, expr.type, status='loc'), expr.var, expr.type)])
 
     def enterIf(self, ast):
         ast.endLabel = LABEL_GENERATOR.nextLabel()
@@ -249,21 +283,21 @@ class BuildMiddleCodeListener(BaseASTListener):
         block = ast.getBlockIfTrue()
 
         if not ast.getElifs() and not ast.getElse():
-            block.code_before = [TestCondition(ast.endLabel)]
-            block.code_after = [Label(ast.endLabel)]
+            block.addCodeBefore([TestCondition(ast.endLabel)])
+            block.addCodeAfter([Label(ast.endLabel)])
         else:
             l = LABEL_GENERATOR.nextLabel()
-            block.code_before = [TestCondition(l)]
-            block.code_after = [GoTo(ast.endLabel), Label(l)]
+            block.addCodeBefore([TestCondition(l)])
+            block.addCodeAfter([GoTo(ast.endLabel), Label(l)])
 
     def exitElse(self, ast):
-        ast.code_after = [Label(ast.parent.endLabel)]
+        ast.addCodeAfter([Label(ast.parent.endLabel)])
 
     def exitElif(self, ast):
         block = ast.getBlock()
         l = LABEL_GENERATOR.nextLabel()
-        block.code_before = [TestCondition(l)]
-        block.code_after = [GoTo(ast.parent.endLabel), TestCondition(l)]
+        block.addCodeBefore([TestCondition(l)])
+        block.addCodeAfter([GoTo(ast.parent.endLabel), TestCondition(l)])
 
     def enterWhileStatement(self, ast):
         ast.startLabel = LABEL_GENERATOR.nextLabel()
@@ -272,40 +306,40 @@ class BuildMiddleCodeListener(BaseASTListener):
     def exitWhileStatement(self, ast):
         expr = ast.getFirstChild()
         block = ast.getLastChild()
-        expr.code_before = [Label(ast.startLabel)]
-        expr.code_after = [TestCondition(ast.endLabel)]
-        block.code_after = [GoTo(ast.startLabel), Label(ast.endLabel)]
+        expr.addCodeBefore([Label(ast.startLabel)])
+        expr.addCodeAfter([TestCondition(ast.endLabel)])
+        block.addCodeAfter([GoTo(ast.startLabel), Label(ast.endLabel)])
 
     def visitBreak(self, ast):
-        ast.code = [GoTo(ast.getFirstParentByName(CYCLES).endLabel)]
+        ast.addCode([GoTo(ast.getFirstParentByName(CYCLES).endLabel)])
 
     def visitContinue(self, ast):
-        ast.code = [GoTo(ast.getFirstParentByName(CYCLES).startLabel)]
+        ast.addCode([GoTo(ast.getFirstParentByName(CYCLES).startLabel)])
 
     def enterForStatement(self, ast):
         ast.startLabel = LABEL_GENERATOR.nextLabel()
         ast.endLabel = LABEL_GENERATOR.nextLabel()
 
     def exitForStatement(self, ast):
-        ast.code_after = [Label(ast.endLabel)]
+        ast.addCodeAfter([Label(ast.endLabel)])
 
     def exitForCondition(self, ast):
-        ast.code_before = [Label(ast.parent.startLabel)]
-        ast.code_after = [TestCondition(ast.parent.endLabel)]
+        ast.addCodeBefore([Label(ast.parent.startLabel)])
+        ast.addCodeAfter([TestCondition(ast.parent.endLabel)])
 
     def exitForUpdate(self, ast):
-        ast.code_after = [GoTo(ast.parent.startLabel)]
+        ast.addCodeAfter([GoTo(ast.parent.startLabel)])
 
     def exitFunctionDeclaration(self, ast):
         name = ast.getFirstChild().getName()
-        ast.code_before = ['.start {}'.format(name)]
-        ast.code_after = ['.end {}'.format(name)]
+        ast.addCodeBefore(['.start {}'.format(name)])
+        ast.addCodeAfter(['.end {}'.format(name)])
 
     def exitProgramme(self, ast):
         block = ast.getJustBlock()
         if block:
-            block.code_before = ['.start main']
-            block.code_after = ['.end main']
+            block.addCodeBefore(['.start main'])
+            block.addCodeAfter(['.end main'])
 
     def recordAccessCode(self, ast):
         fc = ast.getFirstChild()
@@ -315,5 +349,5 @@ class BuildMiddleCodeListener(BaseASTListener):
         ast.var = self.ng.nextVariable(ast.type)
         sc = ast.getLastChild()
         leftVar = self.recordAccessCode(fc)
-        ast.code = [AccessRecordField(ast.var, leftVar, sc.value, ast.type)]
+        ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
         return ast.var

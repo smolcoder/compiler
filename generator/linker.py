@@ -6,18 +6,6 @@ class MiddleCodeLinker:
     def __init__(self):
         self.code = []
 
-    def getCodeBefore(self, ast):
-        if hasattr(ast, 'code_before'):
-            self.code += ast.code_before
-
-    def getCodeAfter(self, ast):
-        if hasattr(ast, 'code_after'):
-            self.code += ast.code_after
-
-    def getCode(self, ast):
-        if hasattr(ast, 'code'):
-            self.code += ast.code
-
     def linkChildren(self, ast):
         if isinstance(ast, NonTerminalASTNode):
             for c in ast.getChildren():
@@ -34,13 +22,13 @@ class MiddleCodeLinker:
         self.link(forUpdate)
 
     def link(self, ast):
-        self.getCodeBefore(ast)
+        self.code += ast.getCodeBefore()
         if ast.name == 'forStatement':
             self.linkForStatement(ast)
         else:
             self.linkChildren(ast)
-            self.getCode(ast)
-        self.getCodeAfter(ast)
+            self.code += ast.getCode()
+        self.code += ast.getCodeAfter()
 
 
 def linkCode(ast):
@@ -49,7 +37,7 @@ def linkCode(ast):
     return linker.code
 
 
-def makeTAD(ast):
+def makeTAC(ast):
     l = BuildMiddleCodeListener(ast.getGlobalEnv())
     walkAST(l, ast)
     return linkCode(ast)

@@ -10,7 +10,7 @@ GET_MNEMONIC_ARITH = {
     '%': 'irem',
     }
 
-GET_MNEMONIC_BOOL = {
+GET_MNEMONIC_CMP = {
     '<': 'if_icmplt',
     '<=': 'if_icmple',
     '>': 'if_icmpgt',
@@ -71,37 +71,44 @@ class ClinitGenerator(JasminBaseGenerator):
             bytecode += ['getfield Main${}/{} {}'.format(line.t2.type, line.t3, self.getType(line.type))]
         elif isinstance(line, Push):
             bytecode += [self.getStaticField(line.var.name, line.var.type)]
+        elif isinstance(line, IfNeEq):
+            bytecode += ['if{} {}'.format('ne' if line.op == '!=' else 'eq', line.label)]
+        elif isinstance(line, Label):
+            bytecode += self.label(line.label)
+        elif isinstance(line, PushBoolConst):
+            bytecode += self.push_const('1' if line.f else '0')
+        elif isinstance(line, GoTo):
+            bytecode += ['goto {}'.format(line.label)]
         elif isinstance(line, (TwoAC, TwoACOp, ThreeAC)):
             if isinstance(line, TwoAC):
                 if isinstance(line.t2, Const):
                     bytecode += self.push_const(line.t2.value)
-                elif isinstance(line.t2, Variable) and line.t2.status == 'loc':
-                    bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
+                # elif isinstance(line.t2, Variable) and line.t2.status == 'loc':
+                #     bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
             elif isinstance(line, TwoACOp):
                 op = line.op
-                if line.t2.status == 'loc':
-                    bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
+                # if line.t2.status == 'loc':
+                #     bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
                 if op == '-':
                     bytecode += ['ineg']
                 elif op == '!':
                     bytecode += ['ineg']
             elif isinstance(line, ThreeAC):
-                if line.t2.status == 'loc':
-                    bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
-                if line.t3.status == 'loc':
-                    bytecode += [self.getStaticField(line.t3.name, line.t3.type)]
+                # if line.t2.status == 'loc':
+                #     bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
+                # if line.t3.status == 'loc':
+                #     bytecode += [self.getStaticField(line.t3.name, line.t3.type)]
                 op = line.op
                 if op in GET_MNEMONIC_ARITH:
                     bytecode += [GET_MNEMONIC_ARITH[op]]
-                else:
+                elif op in GET_MNEMONIC_CMP:
                     elseLabel = LABEL_GENERATOR.nextLabel()
                     endLabel = LABEL_GENERATOR.nextLabel()
-                    bytecode += ['{} {}'.format(GET_MNEMONIC_BOOL[op], elseLabel)]
+                    bytecode += ['{} {}'.format(GET_MNEMONIC_CMP[op], elseLabel)]
                     bytecode += ['iconst_1', 'goto {}'.format(endLabel)]
                     bytecode += self.label(elseLabel)
                     bytecode += ['iconst_0']
                     bytecode += self.label(endLabel)
-
 
             # save result or not
             if line.t1.status == 'loc':

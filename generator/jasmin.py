@@ -15,7 +15,7 @@ class JasminBaseGenerator:
             return self.strType
         return self.recType(actualType)
 
-    def limits(self, stack=4, local=64):
+    def limits(self, stack=64, local=64):
         return ['.limit stack {}'.format(stack),
                 '.limit locals {}'.format(local)]
 

@@ -48,20 +48,21 @@ def isRecord(t):
     return not isPrimitive(t)
 
 
-def jasmin(jasFile, pathToJar='lib/', out='out/'):
+def jasmin(jasFile, pathToJar=None, out=None):
     from os import system
-    system('java -jar {}/jasmin.jar -d {} {}'.format(pathToJar, out, jasFile))
+    return system('java -jar {} -d {} {}'.format(pathToJar or here('lib', 'jasmin.jar'),
+                                          out or here('out'), jasFile))
 
 
-def java(name, classpath='out/'):
-    cmd = "java -classpath {} {}".format(classpath, name)
-    print cmd
+def java(name, classpath=None):
+    cmd = "java -classpath {} {}".format(classpath or here('out'), name)
+    print 'Run {}: {}'.format(name, cmd)
     return os.system(cmd)
 
 
 def run(filename):
     jasmin(filename)
-    java(filename)
+    return java(filename)
 
 
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))

@@ -5,15 +5,16 @@ from utils import jasmin
 from utils import here
 
 
-def runProgramme(ast, filename, classname):
+def runProgramme(ast, filename, classname, jasFilePath=None, out=None):
     cg = ClassFileGenerator(classname, ast, filename)
-    jas = here('sources', 'jas')
-    cg.generateToFile(jas)
-    jasmin(here('sources', 'jas', '{}.j'.format(classname)))
+    jasFilePath = jasFilePath or here('sources', 'jas')
+    out = out or here('out/')
+    cg.generateToFile(jasFilePath)
+    jasmin(here(jasFilePath, '{}.j'.format(classname)), out=out)
 
     for r in ast.env.records:
         rcg = RecordGenerator(r, ast.env.resolveRecord(r)['ast'], filename)
-        rcg.generateToFile(jas)
-        jasmin(here('sources', 'jas', '{}.j'.format(r)))
+        rcg.generateToFile(jasFilePath)
+        jasmin(here('sources', 'jas', '{}.j'.format(r)), out=out)
 
-    java(classname)
+    return java(classname, classpath=out)

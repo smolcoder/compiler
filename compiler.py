@@ -1,8 +1,9 @@
 from antlr4 import CommonTokenStream, ParseTreeWalker
 
 from ast import ASTBuildListener, SyntaxErrorListener
-from env import buildEnv
+from env import buildEnv, makeVariableTables
 from errors import CompilerError
+from generator.linker import makeTAC
 from grammar.gen.LLangLexer import LLangLexer
 from grammar.gen.LLangParser import LLangParser
 from semantic import checkOnlyOneOuterJustBlock
@@ -13,11 +14,12 @@ from semantic.typechecker import typeCheck
 
 
 class CompilerResult:
-    def __init__(self, ast=None, bytecode=None, errors=None, globalEnv=None):
+    def __init__(self, ast=None, bytecode=None, errors=None, globalEnv=None, middleCode=None):
         self.ast = ast
         self.globalEnv = globalEnv
         self.bytecode = bytecode
         self.errors = errors
+        self.middleCode = middleCode
 
     def printErrors(self):
         if self.errors:
@@ -71,7 +73,10 @@ class Compiler:
         if dbzErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=dbzErrors)
 
-        return CompilerResult(ast=ast, globalEnv=globalEnv)
+        makeVariableTables(ast)
+        middleCode = makeTAC(ast)
+
+        return CompilerResult(ast=ast, globalEnv=globalEnv, middleCode=middleCode)
 
     def typeCheck(self, ast, env):
         return typeCheck(ast, env)

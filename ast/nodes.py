@@ -14,6 +14,26 @@ class ASTNode:
         self.env = None
         self.globalEnv = None
 
+        self.codeBefore, self.code, self.codeAfter = [], [], []
+
+    def addCode(self, code):
+        self.code += code
+
+    def addCodeAfter(self, code):
+        self.codeAfter += code
+
+    def addCodeBefore(self, code):
+        self.codeBefore += code
+
+    def getCode(self):
+        return self.code
+
+    def getCodeAfter(self):
+        return self.codeAfter
+
+    def getCodeBefore(self):
+        return self.codeBefore
+
     def getFirstParentByName(self, names, itself=False):
         if isinstance(names, str):
             names = [names]
