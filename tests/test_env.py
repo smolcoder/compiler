@@ -5,18 +5,21 @@ from tests import BaseTestCase
 
 class NameCollisionTestCase(BaseTestCase):
     def test_variable(self):
-        # result = self.compile('Int i; Int i;')
-        # self.assertEquals(len(result.errors), 1)
-        #
-        # self.assertHasError('Int i; {Int i;}')
-        #
-        # result = self.compile('{while(true){Int i; Int i;}}')
-        # self.assertEquals(len(result.errors), 1)
+        result = self.compile('Int i; Int i;')
+        self.assertEquals(len(result.errors), 1)
 
-        self.assertHasError('{while(3){Int i; {Int i;}}}')
+        self.assertHasNoError('Int i; {Int i;}')
 
-        # self.assertHasError('fun foo(a:Int, a:Int):None {}')
-        # self.assertHasError('{Int a; Int a;}')
+        result = self.compile('{while(true){Int i; Int i;}}')
+        self.assertEquals(len(result.errors), 1)
+
+        self.assertHasError('{while(true){Int i; {Int i;}}}')
+
+        self.assertHasError('{Int i; for(Int i = 0; i < 10; i += 1}{}')
+        self.assertHasNoError('{for(Int i = 0; i < 10; i += 1){} Int i;}')
+
+        self.assertHasError('fun foo(a:Int, a:Int):None {}')
+        self.assertHasError('{Int a; Int a;}')
 
     def test_function(self):
         self.assertHasError('fun foo():None {}\nfun foo():None {}')

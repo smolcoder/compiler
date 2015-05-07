@@ -81,6 +81,13 @@ class BuildEnvListener(BaseASTListener):
         self.stack = Stack()
         self.globalEnv = None
         self.errors = []
+        self.scopes = []
+
+    def resolve(self, name):
+        for s in self.scopes:
+            if name in s:
+                return True
+        return False
 
     def enterProgramme(self, ast):
         ast.env = GlobalEnv(ast)
@@ -93,9 +100,11 @@ class BuildEnvListener(BaseASTListener):
     def enterJustBlock(self, ast):
         ast.env = Env(ast)
         self.stack.push(ast.env)
+        self.scopes = [{}] + self.scopes
 
     def exitJustBlock(self, ast):
         self.stack.pop()
+        self.scopes = self.scopes[1:]
 
     def enterRecordBody(self, ast):
         ast.env = Env(ast)
@@ -105,19 +114,44 @@ class BuildEnvListener(BaseASTListener):
 
     def enterVariableDeclaration(self, ast):
         env = self.stack.top()
-        if not env.putVariable(ast.getName(), ast.getType(), ast):
+        if not env.putVariable(ast.getName(), ast.getType(), ast) or self.resolve(ast.getName()):
             self.errors.append(NameAlreadyDefinedError(ast.getName(), ast.source))
-        pass
+        else:
+            if self.scopes:
+                self.scopes[0][ast.getName()] = 1
 
     def exitRecordBody(self, ast):
         self.stack.pop()
 
+    def enterWhileStatement(self, ast):
+        ast.env = Env(ast)
+        self.stack.push(ast.env)
+        self.scopes = [{}] + self.scopes
+
+    def exitWhileStatement(self, ast):
+        self.stack.pop()
+        self.scopes = self.scopes[1:]
+
+    def enterForStatement(self, ast):
+        ast.env = Env(ast)
+        self.stack.push(ast.env)
+        self.scopes = [{}] + self.scopes
+
+    def exitForStatement(self, ast):
+        self.stack.pop()
+        self.scopes = self.scopes[1:]
+
     def enterFunctionDeclaration(self, ast):
         ast.env = Env(ast)
         self.stack.push(ast.env)
+        self.scopes = [{}] + self.scopes
         s = ast.getFirstChild()  # signature
         if not self.globalEnv.putFunction(s):
             self.errors.append(NameAlreadyDefinedError(s.getName(), s.source))
+
+    def exitFunctionDeclaration(self, ast):
+        self.stack.pop()
+        self.scopes = self.scopes[1:]
 
     def enterFunctionSignature(self, ast):
         env = self.stack.top()
@@ -126,9 +160,6 @@ class BuildEnvListener(BaseASTListener):
             if not env.putVariable(name, _type, varAst):
                 self.errors.append(NameAlreadyDefinedError(name, varAst.source))
 
-    def exitFunctionDeclaration(self, ast):
-        self.stack.pop()
-
 
 def buildEnv(ast):
     listener = BuildEnvListener()
@@ -136,11 +167,11 @@ def buildEnv(ast):
     return listener.globalEnv, listener.errors
 
 
-def makeVariableTables(ast):
+def populateVariableTables(ast):
     block = ast.getJustBlock()
     ast.lvt = ast.env.generateLocalVariableTable()
     if block:
         block.lvt = block.getEnv().generateLocalVariableTable()
     for name in ast.env.functions:
         a = ast.env.resolveFunction(name)['ast']
-        a.lvt = ast.env.generateLocalVariableTable()
+        a.lvt = a.env.generateLocalVariableTable()

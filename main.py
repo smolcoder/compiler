@@ -17,8 +17,8 @@ def main():
     else:
         ast = result.ast
         pprintAST(ast)
-        print '\n'.join(map(str, result.middleCode))
-        print '_' * 50
-        runProgramme(ast, 'Main', 'Main')
+        # print '\n'.join(map(str, result.middleCode))
+        # print '_' * 50
+        # runProgramme(ast, 'Main', 'Main')
 
 main()

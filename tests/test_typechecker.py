@@ -12,23 +12,23 @@ class TypeCheckerTestCase(BaseTestCase):
         data = open('source/record_access.llang').read() + code
         return self.compile(data)
 
-    def test_cortege_access_type(self):
-        ca = self.getLeftHandSide('[Int] c; {c[0] = 2;}')
-        self.assertEqual(ca.type, 'Int')
-
-        cortege = '[Int, [Str, Bool, [Int], [Bool, Str], Int], Str] c;'
-
-        ca = self.getLeftHandSide(cortege + '\n{c[0] = 2;}')
-        self.assertEqual(ca.type, 'Int')
-
-        ca = self.getLeftHandSide(cortege + '\n{c[1][0] = 2;}')
-        self.assertEqual(ca.type, 'Str')
-
-        ca = self.getLeftHandSide(cortege + '\n{c[1][2][0] = 2;}')
-        self.assertEqual(ca.type, 'Int')
-
-        ca = self.getLeftHandSide(cortege + '\n{c[1][3][1] = 2;}')
-        self.assertEqual(ca.type, 'Str')
+    # def test_cortege_access_type(self):
+    #     ca = self.getLeftHandSide('[Int] c; {c[0] = 2;}')
+    #     self.assertEqual(ca.type, 'Int')
+    #
+    #     cortege = '[Int, [Str, Bool, [Int], [Bool, Str], Int], Str] c;'
+    #
+    #     ca = self.getLeftHandSide(cortege + '\n{c[0] = 2;}')
+    #     self.assertEqual(ca.type, 'Int')
+    #
+    #     ca = self.getLeftHandSide(cortege + '\n{c[1][0] = 2;}')
+    #     self.assertEqual(ca.type, 'Str')
+    #
+    #     ca = self.getLeftHandSide(cortege + '\n{c[1][2][0] = 2;}')
+    #     self.assertEqual(ca.type, 'Int')
+    #
+    #     ca = self.getLeftHandSide(cortege + '\n{c[1][3][1] = 2;}')
+    #     self.assertEqual(ca.type, 'Str')
 
     def test_cortege_access_out_of_bound(self):
         self.assertHasError('[Int] c; {c[1] = 2;}')

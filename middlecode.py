@@ -1,4 +1,4 @@
-from ast import CYCLES, BaseASTListener
+from ast import CYCLES, BaseASTListener, TerminalASTNode
 
 
 class MiddleCode:
@@ -252,7 +252,9 @@ class BuildMiddleCodeListener(BaseASTListener):
         ast.addCodeBefore([NewRecord(ast.getFirstChild().value)])
 
     def exitRecordInitializer(self, ast):
-        types = [f.getLastChild().type for f in ast.getLastChild().getChildren()]
+        types = []
+        if not isinstance(ast.getLastChild(), TerminalASTNode):
+            types = [f.getLastChild().type for f in ast.getLastChild().getChildren()]
         ast.addCode([CreateRecord(ast.var, ast.getFirstChild().value, types)])
 
     def exitLeftHandSide(self, ast):

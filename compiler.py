@@ -1,7 +1,7 @@
 from antlr4 import CommonTokenStream, ParseTreeWalker
 
 from ast import ASTBuildListener, SyntaxErrorListener
-from env import buildEnv, makeVariableTables
+from env import buildEnv, populateVariableTables
 from errors import CompilerError
 from generator.linker import makeTAC
 from grammar.gen.LLangLexer import LLangLexer
@@ -73,7 +73,7 @@ class Compiler:
         if dbzErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=dbzErrors)
 
-        makeVariableTables(ast)
+        populateVariableTables(ast)
         middleCode = makeTAC(ast)
 
         return CompilerResult(ast=ast, globalEnv=globalEnv, middleCode=middleCode)

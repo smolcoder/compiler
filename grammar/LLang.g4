@@ -27,7 +27,7 @@ functionReturnType
     ;
 
 functionBody
-    : '{' statement* '}'
+    : '{' statement* returnStatement? '}'
     ;
 
 functionParameterList
@@ -114,7 +114,7 @@ justBlock
     ;
 
 statement
-    : block
+    : justBlock
     | variableDeclarationStatement
     | assignmentStatement
     | ifStatement
@@ -126,7 +126,6 @@ statement
     | writelnStatement
     | breakStatement
     | continueStatement
-    | returnStatement
     ;
 
 breakStatement

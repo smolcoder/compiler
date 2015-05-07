@@ -19,3 +19,17 @@ class NormalizeRecordInitializerListener(BaseASTListener):
 def normalizeRecordInitializer(ast):
     l = NormalizeRecordInitializerListener(ast.getGlobalEnv())
     walkAST(l, ast)
+
+
+# class AlreadyDefinedListener(BaseASTListener):
+#     def __init__(self):
+#         self.scopes = []
+#
+#     def resolve(self, name):
+#         for
+#
+#     def enterFunctionDeclaration(self, ast):
+#         self.scopes.append({})
+#
+#     def exitFunctionDeclaration(self, ast):
+#         self.scopes.append({})
