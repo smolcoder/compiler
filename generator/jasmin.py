@@ -1,9 +1,11 @@
-from ast import BaseASTListener
-from localvartable import LocalVariableTable
-from middlecode import *
+class JasminBaseGenerator:
+    def __init__(self, ast, filename='Main'):
+        self.ast = ast
+        self.filename = filename
 
+    def generate(self):
+        pass
 
-class JasminBase:
     def getType(self, actualType):
         if actualType == 'Int':
             return 'I'
@@ -13,24 +15,15 @@ class JasminBase:
             return self.strType
         return self.recType(actualType)
 
-    def globalHead(self):
-        return ['.class public Greeter', '.super java/lang/Object']
-
-    def limits(self, stack, local):
+    def limits(self, stack=4, local=64):
         return ['.limit stack {}'.format(stack),
                 '.limit locals {}'.format(local)]
 
-    # def defaultConstructor(self):
-    #     return ['.method public <init>()V',
-    #             'aload_0',
-    #             'invokespecial java/lang/Object/<init>()V',
-    #             'return',
-    #             '.end method']
+    def label(self, l):
+        return ['{}:'.format(l)]
 
-    # def wrapInMain(self, code):
-    #     code = ['.method public static main([Ljava/lang/String;)V'] + code
-    #     code += '.end method'
-    #     return code
+    def emptyLine(self):
+        return ['']
 
     def _arg_opt_command(self, cmd, const):
         if const not in [0, 1, 2, 3]:
@@ -60,44 +53,12 @@ class JasminBase:
         except:
             return ['ldc "{}"'.format(const)]
 
+    def comment(self, s):
+        return [';    {}'.format(s)]
+
     @property
     def strType(self):
         return 'Ljava/lang/String;'
 
     def recType(self, rec):
         return 'LMain${};'.format(rec)
-
-
-class ExpressionJasmin(JasminBase):
-    def __init__(self, tad, lvt):
-        """
-        :type lvt: LocalVariableTable
-        """
-        self.tad = tad
-        self.lvt = lvt
-        self.bytecode = []
-
-    def processThreeAD(self, tad):
-        pass
-
-    def processTwoAD(self, tad):
-        if isinstance(tad.t2, Const):
-            self.bytecode += tad.t2.getByteCode()
-
-    def processTwoADOp(self, tad):
-        pass
-
-    def processLines(self):
-        for l in self.tad:
-            methodName = 'process{}'.format(l.__class__.__name__)
-            if hasattr(self, methodName):
-                getattr(self, methodName)(l)
-
-
-class MainGenListener(BaseASTListener):
-    def __init__(self, rootAst):
-        self.bytecode = []
-        self.gEnv = rootAst.getGlovalEnv()
-        self.gvt = rootAst.lvt
-
-    # def

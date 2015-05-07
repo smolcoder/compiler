@@ -6,9 +6,9 @@ from compiler import Compiler
 # todo  make any semantic checking abstract
 # todo  add checking clinit variables (using uninitialized variable)
 from env import makeVariableTables
+from generator.linker import makeTAD
 
-from generator import makeTAD, linkCode
-from generator.clinit import ClinitGenerator
+from runner import runProgramme
 
 
 def main():
@@ -20,13 +20,10 @@ def main():
         ast = result.ast
         makeVariableTables(ast)
         makeTAD(ast)
-        # e = ast.filterByName('statement')
-        # makeTAD(ast)
-        # for i in e:
-        #     print '\n'.join(linkCode(i))
-        # print '\n'.join(map(str, makeTAD(ast)))
-        cg = ClinitGenerator(ast)
-        cg.generate()
+
         # pprintAST(ast)
+        print '\n'.join(map(str, makeTAD(ast)))
+        print '_' * 50
+        runProgramme(ast, 'Main', 'Main')
 
 main()

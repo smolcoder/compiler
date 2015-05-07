@@ -1,0 +1,25 @@
+record R3 {
+    Int i;
+    Str c;
+}
+
+record R2 {
+    Bool f;
+    R3 r3;
+}
+
+record R1 {
+    R2 r2;
+}
+
+Str s = "asdf";
+R3 r3 = new R3(i=3, c=s);
+R2 r2 = new R2(r3=r3, f=!(true || false));
+R1 r1 = new R1(r2=r2);
+Int k = r1.r2.r3.i;
+Int j = r3.i * k - 1;
+Bool f = j > 1;
+
+
+{
+}

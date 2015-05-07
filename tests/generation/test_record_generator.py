@@ -1,3 +1,5 @@
+from env import makeVariableTables
+from generator import makeTAD
 from generator.record import RecordGenerator
 import shutil
 from tests import BaseTestCase
