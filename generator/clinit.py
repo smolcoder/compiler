@@ -28,15 +28,9 @@ class ClinitGenerator(JasminBaseGenerator):
             bc += self.processLine(l)
         return bc
 
-    def getStaticField(self, name, _type):
-        return 'getstatic Main/{} {}'.format(name, self.getType(_type))
-
-    def putStaticField(self, name, _type):
-        return 'putstatic Main/{} {}'.format(name, self.getType(_type))
-
     def pushIfLocalOrConst(self, var):
         if isinstance(var, Const):
-            return self.push_const(var.value)
+            return self.push_const(var.value, var.type)
         if var.status == 'loc':
             return [self.getStaticField(var.name, var.type)]
         return []
@@ -67,13 +61,13 @@ class ClinitGenerator(JasminBaseGenerator):
         elif isinstance(line, Label):
             bytecode += self.label(line.label)
         elif isinstance(line, PushBoolConst):
-            bytecode += self.push_const('1' if line.f else '0')
+            bytecode += self.push_const('1' if line.f else '0', 'Bool')
         elif isinstance(line, GoTo):
             bytecode += ['goto {}'.format(line.label)]
         elif isinstance(line, (TwoAC, TwoACOp, ThreeAC)):
             if isinstance(line, TwoAC):
                 if isinstance(line.t2, Const):
-                    bytecode += self.push_const(line.t2.value)
+                    bytecode += self.push_const(line.t2.value, line.t2.type)
                 elif isinstance(line.t2, Variable):
                     bytecode += self.pushIfLocalOrConst(line.t2)
             elif isinstance(line, TwoACOp):

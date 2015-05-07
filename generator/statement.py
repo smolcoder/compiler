@@ -40,13 +40,19 @@ class StatementGenerator(JasminBaseGenerator):
         Put onto stack
         """
         if isinstance(var, Const):
-            return self.push_const(var.value)
+            return self.push_const(var.value, var.type)
         if var.status == 'loc':
+            info = self.gvt.get(var.name)
+            if info:
+                return [self.getStaticField(info['name'], info['type'])]
             return [self.getLocalArg(var.name)]
         return []
 
-    def storeIfLocal(self, var):
+    def storeIfVar(self, var):
         if var.status == 'loc':
+            info = self.gvt.get(var.name)
+            if info:
+                return [self.putStaticField(info['name'], info['type'])]
             return [self.putLocalArg(var.name)]
         return []
 
@@ -57,23 +63,20 @@ class StatementGenerator(JasminBaseGenerator):
                 line.name,
                 ''.join([self.getType(t) for t in line.types])
             )]
-
+        elif isinstance(line, NewRecord):
+            bytecode += ['new Main${}'.format(line.name), 'dup']
         # elif isinstance(line, CallFunction):
         #     fEnv = self.env.resolveFunction(line.name)
         #     _type = ''.join([self.getType(t) for n, t in fEnv['args']])
         #     rType = self.getType(fEnv['type'])
         #     bytecode += ['invokestatic Main/{}({}){}'.format(line.name, _type, rType)]
 
-        # elif isinstance(line, AccessRecordField):
-        #     if line.t2.status == 'loc':
-        #         bytecode += [self.getLocalArg(line.t2.name)]
-        #     bytecode += ['getfield Main${}/{} {}'.format(line.t2.type, line.t3, self.getType(line.type))]
+        elif isinstance(line, AccessRecordField):
+            bytecode += self.pushIfLocalOrConst(line.t2)
+            bytecode += ['getfield Main${}/{} {}'.format(line.t2.type, line.t3, self.getType(line.type))]
 
         elif isinstance(line, Push):
-            if isinstance(line.var, Const):
-                bytecode += self.push_const(line.var.value)
-            else:
-                bytecode += [self.getLocalArg(line.var.name)]
+            bytecode += self.pushIfLocalOrConst(line.var)
         elif isinstance(line, IfNeEq):
             bytecode += self.pushIfLocalOrConst(line.var)
             bytecode += ['if{} {}'.format('ne' if line.op == '!=' else 'eq', line.label)]
@@ -82,7 +85,7 @@ class StatementGenerator(JasminBaseGenerator):
         elif isinstance(line, TestCondition):
             bytecode += ['ifeq {}'.format(line.label)]
         elif isinstance(line, PushBoolConst):
-            bytecode += self.push_const('1' if line.f else '0')
+            bytecode += self.push_const('1' if line.f else '0', 'Bool')
         elif isinstance(line, GoTo):
             bytecode += ['goto {}'.format(line.label)]
         elif isinstance(line, WriteLnCall):
@@ -97,7 +100,7 @@ class StatementGenerator(JasminBaseGenerator):
             if not line.isLast:
                 bytecode += ['dup']
         elif isinstance(line, NewArray):
-            bytecode += self.push_const(str(line.size))
+            bytecode += self.push_const(str(line.size), 'Int')
             bytecode += ['anewarray java/lang/Object', 'dup']
 
         elif isinstance(line, Return):
@@ -129,7 +132,7 @@ class StatementGenerator(JasminBaseGenerator):
                     bytecode += self.label(endLabel)
 
             # save result or not
-            bytecode += self.storeIfLocal(line.t1)
+            bytecode += self.storeIfVar(line.t1)
         return bytecode
 
     def makeReturn(self, _type):

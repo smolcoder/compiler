@@ -15,6 +15,12 @@ class JasminBaseGenerator:
             return self.strType
         return self.recType(actualType)
 
+    def getStaticField(self, name, _type):
+        return 'getstatic Main/{} {}'.format(name, self.getType(_type))
+
+    def putStaticField(self, name, _type):
+        return 'putstatic Main/{} {}'.format(name, self.getType(_type))
+
     def limits(self, stack=64, local=64):
         return ['.limit stack {}'.format(stack),
                 '.limit locals {}'.format(local)]
@@ -45,8 +51,10 @@ class JasminBaseGenerator:
     def invokestatic(self, ast):
         return ''
 
-    def push_const(self, const):
-        if const in ['0', '1', '2', '3', '4', '5']:
+    def push_const(self, const, _type):
+        if _type == 'Str':
+            return ['ldc "{}"'.format(const)]
+        if _type == 'Int' and const in ['0', '1', '2', '3', '4', '5']:
             return ['iconst_{}'.format(const)]
         if const in ['true', 'false']:
             return ['iconst_0' if const == 'false' else 'iconst_1']

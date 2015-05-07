@@ -184,15 +184,6 @@ class Const(TACEntity):
         self.value = value
         self.type = _type
 
-    def getByteCode(self):
-        if self.type == 'Bool':
-            if self.value == 'true':
-                return ['iconst_1']
-            return ['iconst_0']
-        if self.value in [0, 1, 2, 3, 4, 5]:
-            return ['iconst_{}'.format(self.value)]
-        return ['ldc {}'.format(self.value)]
-
     def __str__(self):
         if self.type == 'Str':
             return '"{}"'.format(self.value)
@@ -269,8 +260,11 @@ class BuildMiddleCodeListener(BaseASTListener):
 
         elif fc.name == 'leftHandSide':
             if ast.parent.name in ['recordFieldInitializer', 'argumentList']:
-                ast.var = Variable(fc.var.name, fc.var.type, 'loc')
-                ast.addCode([Push(ast.var)])
+                if fc.var.status == 'loc':
+                    ast.var = Variable(fc.var.name, fc.var.type, 'loc')
+                    ast.addCode([Push(ast.var)])
+                else:
+                    ast.var = fc.var
             else:
                 ast.var = fc.var
         elif fc.name == 'functionInvocation':
@@ -356,11 +350,11 @@ class BuildMiddleCodeListener(BaseASTListener):
 
         if not ast.getElifs() and not ast.getElse():
             block.addCodeBefore([TestCondition(ast.getCondition().var, ast.endLabel)])
-            block.addCodeAfter([Label(ast.endLabel)])
         else:
             l = LABEL_GENERATOR.nextLabel()
             block.addCodeBefore([TestCondition(ast.getCondition().var, l)])
             block.addCodeAfter([GoTo(ast.endLabel), Label(l)])
+        ast.addCodeAfter([Label(ast.endLabel)])
 
     def exitElse(self, ast):
         ast.addCodeAfter([Label(ast.parent.endLabel)])
