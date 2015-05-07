@@ -27,7 +27,7 @@ functionReturnType
     ;
 
 functionBody
-    : '{' statement* returnStatement? '}'
+    : '{' statement* '}'
     ;
 
 functionParameterList
@@ -126,6 +126,7 @@ statement
     | writelnStatement
     | breakStatement
     | continueStatement
+    | returnStatement
     ;
 
 breakStatement
