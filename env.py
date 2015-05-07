@@ -21,7 +21,7 @@ class Env:
     def putVariable(self, name, _type, ast):
         if name in self.variables:
             return False
-        self.variables[name] = {'type': _type, 'ast': ast}
+        self.variables[name] = {'type': _type, 'ast': ast, 'name': name}
         self.varOrder.append(name)
         return True
 
@@ -167,11 +167,30 @@ def buildEnv(ast):
     return listener.globalEnv, listener.errors
 
 
-def populateVariableTables(ast):
+def createVariableTables(ast):
     block = ast.getJustBlock()
     ast.lvt = ast.env.generateLocalVariableTable()
     if block:
         block.lvt = block.getEnv().generateLocalVariableTable()
+        populateLVT(block.lvt, block)
     for name in ast.env.functions:
         a = ast.env.resolveFunction(name)['ast']
         a.lvt = a.env.generateLocalVariableTable()
+        populateLVT(a.lvt, a)
+
+
+class PopulateLVTListener(BaseASTListener):
+    def __init__(self, lvt):
+        """
+        :type lvt: LocalVariableTable
+        """
+        self.lvt = lvt
+
+    def enterVariableDeclaration(self, ast):
+        info = ast.getEnv().resolveVariable(ast.getChild(1).value)
+        self.lvt.put(info['name'], info['type'], info['ast'])
+
+
+def populateLVT(lvt, ast):
+    l = PopulateLVTListener(lvt)
+    walkAST(l, ast)

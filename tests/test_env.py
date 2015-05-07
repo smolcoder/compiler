@@ -90,3 +90,28 @@ class EnvTestCase(BaseTestCase):
         var = res.ast.filterByName('variableDeclaration')[0]
         self.assertIsNotNone(var.getEnv().resolveBuildIn('readln'))
         self.assertIsNotNone(res.ast.getEnv().resolveFunction('writeln'))
+
+    def test_lvt_mainblock(self):
+        res = self.compile('Int n; {Int i; {Int j; {Int k;}} for (Int t = 0; t < 10; t += 1){}}')
+        lvt = res.ast.getJustBlock().getLVT()
+        self.assertIn('i', lvt.table)
+        self.assertIn('j', lvt.table)
+        self.assertIn('k', lvt.table)
+        self.assertIn('t', lvt.table)
+        self.assertNotIn('n', lvt.table)
+
+    def test_lvt_fun(self):
+        res = self.compile('Int t; fun foo(i:Int, s:Str):None {Int j;}')
+        lvt = res.ast.filterByName('functionDeclaration')[0].getLVT()
+        self.assertIn('i', lvt.table)
+        self.assertIn('j', lvt.table)
+        self.assertIn('s', lvt.table)
+        self.assertNotIn('t', lvt.table)
+
+    def test_lvt_global(self):
+        res = self.compile('Int t; fun foo(i:Int, s:Str):None {Int j;}')
+        lvt = res.ast.getLVT()
+        self.assertNotIn('i', lvt.table)
+        self.assertNotIn('j', lvt.table)
+        self.assertNotIn('s', lvt.table)
+        self.assertIn('t', lvt.table)
