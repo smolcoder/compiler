@@ -28,6 +28,11 @@ class ClassFileGenerator(JasminBaseGenerator):
         bytecode += self.comment('')
         bytecode += generateWriteLn()
         bytecode += self.comment('')
+
+        for f in self.gEnv.functions.values():
+            bytecode += self.method(f['ast'], self.gvt)
+            bytecode += self.comment('')
+
         bytecode += self.main()
         bytecode += self.comment('')
         bytecode += ClinitGenerator(self.ast).generate()
@@ -59,13 +64,25 @@ class ClassFileGenerator(JasminBaseGenerator):
                            .end method""")
 
     def main(self):
-        bk = ['.method public static main([Ljava/lang/String;)V',
+        bc = ['.method public static main([Ljava/lang/String;)V',
               '.limit stack 64',
               '.limit locals 100']
         main = bodyGenerator(self.mainBlock, self.gvt) if self.mainBlock else []
-        bk += main or ['return']
-        bk += ['.end method']
-        return bk
+        bc += main or ['return']
+        bc += ['.end method']
+        return bc
+
+    def method(self, ast, gvt):
+        name = ast.getFirstChild().getName()
+        info = self.gEnv.resolveFunction(name)
+        retType = info['type']
+        print info
+        argTypes = [t for _, t in info['args']]
+        bc = ['.method static {}'.format(self.methodSignature(name, argTypes, retType))]
+        bc += self.limits()
+        bc += bodyGenerator(ast.getLastChild(), gvt)
+        bc += ['.end method']
+        return bc
 
     def head(self):
         template = """.source {filename}.java
