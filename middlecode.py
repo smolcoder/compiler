@@ -79,11 +79,12 @@ class TestCondition(MiddleCode):
 
 
 class Return(MiddleCode):
-    def __init__(self, var=None):
+    def __init__(self, _type, var=None):
         """
         :type var: Variable
         """
         self.var = var
+        self.type = _type
 
     def __str__(self):
         if self.var:
@@ -235,9 +236,10 @@ class BuildMiddleCodeListener(BaseASTListener):
 
     def exitReturnExpr(self, ast):
         if not ast.getChildren():
-            ast.addCode([Return()])
+            ast.addCode([Return('None')])
         else:
-            ast.addCode([Return(ast.getFirstChild().var)])
+            var = ast.getFirstChild().var
+            ast.addCode([Return(var.type, var)])
 
     # def exitJustBlock(self, ast):
     #     if ast.parent.name != 'Programme' or not ast.getChildren():
@@ -332,7 +334,7 @@ class BuildMiddleCodeListener(BaseASTListener):
         left = ast.getFirstChild().var
         op = ast.getChild(1).value
         right = ast.getLastChild().var
-        if op in ['+=', '-=', '/=', '%=']:
+        if op in ['+=', '-=', '*=', '/=', '%=']:
             ast.addCode([ThreeAC(left, left, op[0], right, ast.getFirstChild().type)])
         else:
             ast.addCode([TwoAC(left, right, ast.getFirstChild().type)])

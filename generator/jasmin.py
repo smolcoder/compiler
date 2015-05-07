@@ -13,6 +13,8 @@ class JasminBaseGenerator:
             return 'Z'
         if actualType == 'Str':
             return self.strType
+        if actualType == 'None':
+            return 'V'
         return self.recType(actualType)
 
     def getStaticField(self, name, _type):
@@ -49,11 +51,11 @@ class JasminBaseGenerator:
         return self._arg_opt_command('istore', const)
 
     def invokestatic(self, name, argTypes, retType):
-        return 'invokestatic Main/{}'.format(self.methodSignature(name, argTypes, retType))
+        return ['invokestatic Main/{}'.format(self.methodSignature(name, argTypes, retType))]
 
     def methodSignature(self, name, argTypes, retType):
         return '{name}({args}){ret}'.format(
-            nane=name,
+            name=name,
             ret=self.getType(retType),
             args=''.join([self.getType(t) for t in argTypes])
         )

@@ -172,6 +172,7 @@ def createVariableTables(ast):
     ast.lvt = ast.env.generateLocalVariableTable()
     if block:
         block.lvt = block.getEnv().generateLocalVariableTable()
+        block.lvt.put('__internal__args', '[Ljava/lang/String;')
         populateLVT(block.lvt, block)
     for name in ast.env.functions:
         a = ast.env.resolveFunction(name)['ast']

@@ -67,7 +67,8 @@ class ClassFileGenerator(JasminBaseGenerator):
         bc = ['.method public static main([Ljava/lang/String;)V',
               '.limit stack 64',
               '.limit locals 100']
-        main = bodyGenerator(self.mainBlock, self.gvt) if self.mainBlock else []
+        main = bodyGenerator(self.mainBlock.getFirstChild().getChildrenByName('statement'), self.gvt) \
+            if self.mainBlock else []
         bc += main or ['return']
         bc += ['.end method']
         return bc
@@ -76,11 +77,10 @@ class ClassFileGenerator(JasminBaseGenerator):
         name = ast.getFirstChild().getName()
         info = self.gEnv.resolveFunction(name)
         retType = info['type']
-        print info
         argTypes = [t for _, t in info['args']]
         bc = ['.method static {}'.format(self.methodSignature(name, argTypes, retType))]
         bc += self.limits()
-        bc += bodyGenerator(ast.getLastChild(), gvt)
+        bc += bodyGenerator(ast.getLastChild().getChildrenByName('statement'), gvt)
         bc += ['.end method']
         return bc
 

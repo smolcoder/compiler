@@ -15,6 +15,7 @@ class StatementGenerator(JasminBaseGenerator):
         JasminBaseGenerator.__init__(self, ast)
         self.lvt = ast.getLVT()  # global variable table
         self.gvt = gvt
+        self.gEnv = ast.getGlobalEnv()
 
     def generate(self):
         lc = linkCode(self.ast)
@@ -26,14 +27,14 @@ class StatementGenerator(JasminBaseGenerator):
     def getLocalArg(self, name):
         info = self.lvt.get(name)
         if isRecord(info['type']) or info['type'] == 'Str':
-            return self.aload(str(info['number'] + 1))
-        return self.iload(str(info['number'] + 1))
+            return self.aload(str(info['number']))
+        return self.iload(str(info['number']))
 
     def putLocalArg(self, name):
         info = self.lvt.get(name)
         if isRecord(info['type']) or info['type'] == 'Str':
-            return self.astore(str(info['number'] + 1))
-        return self.istore(str(info['number'] + 1))
+            return self.astore(str(info['number']))
+        return self.istore(str(info['number']))
 
     def pushIfLocalOrConst(self, var):
         """
@@ -57,7 +58,7 @@ class StatementGenerator(JasminBaseGenerator):
         return []
 
     def processLine(self, line):
-        bytecode = []
+        bytecode = self.comment(str(line))
         if isinstance(line, CreateRecord):
             bytecode += ['invokespecial Main${}/<init>({})V'.format(
                 line.name,
@@ -65,11 +66,12 @@ class StatementGenerator(JasminBaseGenerator):
             )]
         elif isinstance(line, NewRecord):
             bytecode += ['new Main${}'.format(line.name), 'dup']
-        # elif isinstance(line, CallFunction):
-        #     fEnv = self.env.resolveFunction(line.name)
-        #     _type = ''.join([self.getType(t) for n, t in fEnv['args']])
-        #     rType = self.getType(fEnv['type'])
-        #     bytecode += ['invokestatic Main/{}({}){}'.format(line.name, _type, rType)]
+
+        elif isinstance(line, CallFunction):
+            info = self.gEnv.resolveFunction(line.name)
+            retType = info['type']
+            argTypes = [t for _, t in info['args']]
+            bytecode += self.invokestatic(line.name, argTypes, retType)
 
         elif isinstance(line, AccessRecordField):
             bytecode += self.pushIfLocalOrConst(line.t2)
@@ -83,6 +85,7 @@ class StatementGenerator(JasminBaseGenerator):
         elif isinstance(line, Label):
             bytecode += self.label(line.label)
         elif isinstance(line, TestCondition):
+            bytecode += self.pushIfLocalOrConst(line.var)
             bytecode += ['ifeq {}'.format(line.label)]
         elif isinstance(line, PushBoolConst):
             bytecode += self.push_const('1' if line.f else '0', 'Bool')
@@ -104,7 +107,13 @@ class StatementGenerator(JasminBaseGenerator):
             bytecode += ['anewarray java/lang/Object', 'dup']
 
         elif isinstance(line, Return):
-            bytecode += self.makeReturn(line.var.type if line.var else 'None')
+            if line.type == 'None':
+                bytecode += ['return']
+            else:
+                bytecode += self.pushIfLocalOrConst(line.var)
+                if line.type == 'Str' or isRecord(line.type):
+                    bytecode += ['areturn']
+                bytecode += ['ireturn']
 
         elif isinstance(line, (TwoAC, TwoACOp, ThreeAC)):
             if isinstance(line, TwoAC):
@@ -135,16 +144,8 @@ class StatementGenerator(JasminBaseGenerator):
             bytecode += self.storeIfVar(line.t1)
         return bytecode
 
-    def makeReturn(self, _type):
-        if _type == 'None':
-            return ['return']
-        if _type == 'Str' or isRecord(_type):
-            return ['areturn']
-        return ['ireturn']
 
-
-def bodyGenerator(ast, gvt):
-    statements = [s for s in ast.getFirstChild().getChildren() if s.name == 'statement']
+def bodyGenerator(statements, gvt):
     bc = []
     for s in statements:
         bc += StatementGenerator(s, gvt).generate()
