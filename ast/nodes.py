@@ -34,6 +34,9 @@ class ASTNode:
     def getCodeBefore(self):
         return self.codeBefore
 
+    def getLVT(self):
+        return getattr(self, 'lvt')
+
     def getFirstParentByName(self, names, itself=False):
         if isinstance(names, str):
             names = [names]

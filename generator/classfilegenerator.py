@@ -1,6 +1,6 @@
+from generator.bytecodegenerator import ByteCodeGenerator
 from generator.clinit import ClinitGenerator
 from generator.jasmin import JasminBaseGenerator
-from generator.statement import bodyGenerator
 from generator.writeln import generateWriteLn
 from utils import here
 
@@ -38,6 +38,12 @@ class ClassFileGenerator(JasminBaseGenerator):
         bytecode += ClinitGenerator(self.ast).generate()
         return bytecode
 
+    def bodyGenerator(self, statements, gvt):
+        bc = []
+        for s in statements:
+            bc += ByteCodeGenerator(s, gvt).generate()
+        return bc
+
     def generateToFile(self, path):
         print path, self.className
         f = open(here(path, self.className + '.j'), 'w')
@@ -67,7 +73,7 @@ class ClassFileGenerator(JasminBaseGenerator):
         bc = ['.method public static main([Ljava/lang/String;)V',
               '.limit stack 64',
               '.limit locals 100']
-        main = bodyGenerator(self.mainBlock.getFirstChild().getChildrenByName('statement'), self.gvt) \
+        main = self.bodyGenerator(self.mainBlock.getFirstChild().getChildrenByName('statement'), self.gvt) \
             if self.mainBlock else []
         bc += main
         bc += ['.end method']
@@ -80,7 +86,7 @@ class ClassFileGenerator(JasminBaseGenerator):
         argTypes = [t for _, t in info['args']]
         bc = ['.method static {}'.format(self.methodSignature(name, argTypes, retType))]
         bc += self.limits()
-        bc += bodyGenerator(ast.getLastChild().getChildrenByName('statement'), gvt)
+        bc += self.bodyGenerator(ast.getLastChild().getChildrenByName('statement'), gvt)
         bc += ['.end method']
         return bc
 

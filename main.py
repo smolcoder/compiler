@@ -5,7 +5,7 @@ from compiler import Compiler
 # todo  add checking for break and continue
 # todo  make any semantic checking abstract
 # todo  add checking clinit variables (using uninitialized variable)
-from generator.statement import bodyGenerator
+from generator.bytecodegenerator import bodyGenerator
 
 from runner import runProgramme
 

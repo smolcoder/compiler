@@ -1,9 +1,19 @@
 class JasminBaseGenerator:
     def __init__(self, ast, filename='Main'):
+        """
+        Compiles given AST to JVM mnemonic bytecode.
+        See Jasmin tool and its syntax for more information.
+
+        :type ast: NonTerminalASTNode
+        """
         self.ast = ast
         self.filename = filename
 
     def generate(self):
+        """
+        Return mnemonic JVM bytecode of given AST
+        :return: list of str
+        """
         pass
 
     def getType(self, actualType):

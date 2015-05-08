@@ -1,20 +1,21 @@
-from generator.jasmin import JasminBaseGenerator, GET_MNEMONIC_CMP, GET_MNEMONIC_ARITH
+from generator.bytecodegenerator import ByteCodeGenerator
+from generator.jasmin import GET_MNEMONIC_CMP, GET_MNEMONIC_ARITH
 from generator.linker import linkCode
 from middlecode import *
+from utils import isRecord
+from ast.nodes import ProgrammeASTNode
 
 
-class ClinitGenerator(JasminBaseGenerator):
+class ClinitGenerator(ByteCodeGenerator):
     def __init__(self, ast):
         """
-        :param ast: Root ast
+        :type ast: ProgrammeASTNode
         """
-        JasminBaseGenerator.__init__(self, ast)
-        self.gvt = ast.lvt  # global variable table
-        self.env = ast.env
+        ByteCodeGenerator.__init__(self, ast, ast.getLVT())
 
     def generate(self):
         bytecode = ['.method static <clinit>()V'] + self.limits()
-        for v in self.env.varOrder:
+        for v in self.gEnv.varOrder:
             if self.gvt.get(v)['ast'].getLastChild().name != 'expression':
                 continue
             bytecode += self.processVarDec(self.gvt.get(v))
@@ -27,75 +28,3 @@ class ClinitGenerator(JasminBaseGenerator):
         for l in lc:
             bc += self.processLine(l)
         return bc
-
-    def pushIfLocalOrConst(self, var):
-        if isinstance(var, Const):
-            return self.push_const(var.value, var.type)
-        if var.status == 'loc':
-            return [self.getStaticField(var.name, var.type)]
-        return []
-
-    def processLine(self, line):
-        bytecode = []
-        if isinstance(line, CreateRecord):
-            bytecode += ['invokespecial Main${}/<init>({})V'.format(
-                line.name,
-                ''.join([self.getType(t) for t in line.types])
-            )]
-        elif isinstance(line, NewRecord):
-            bytecode += ['new Main${}'.format(line.name), 'dup']
-        elif isinstance(line, CallFunction):
-            fEnv = self.env.resolveFunction(line.name)
-            _type = ''.join([self.getType(t) for n, t in fEnv['args']])
-            rType = self.getType(fEnv['type'])
-            bytecode += ['invokestatic Main/{}({}){}'.format(line.name, _type, rType)]
-        elif isinstance(line, AccessRecordField):
-            if line.t2.status == 'loc':
-                bytecode += [self.getStaticField(line.t2.name, line.t2.type)]
-            bytecode += ['getfield Main${}/{} {}'.format(line.t2.type, line.t3, self.getType(line.type))]
-        elif isinstance(line, Push):
-            bytecode += self.pushIfLocalOrConst(line.var)
-        elif isinstance(line, IfEq):
-            bytecode += self.pushIfLocalOrConst(line.var)
-            bytecode += ['ifeq {}'.format(line.label)]
-        elif isinstance(line, IfNe):
-            bytecode += self.pushIfLocalOrConst(line.var)
-            bytecode += ['ifne {}'.format(line.label)]
-        elif isinstance(line, Label):
-            bytecode += self.label(line.label)
-        elif isinstance(line, PushBoolConst):
-            bytecode += self.push_const('1' if line.f else '0', 'Bool')
-        elif isinstance(line, GoTo):
-            bytecode += ['goto {}'.format(line.label)]
-        elif isinstance(line, (TwoAC, TwoACOp, ThreeAC)):
-            if isinstance(line, TwoAC):
-                if isinstance(line.t2, Const):
-                    bytecode += self.push_const(line.t2.value, line.t2.type)
-                elif isinstance(line.t2, Variable):
-                    bytecode += self.pushIfLocalOrConst(line.t2)
-            elif isinstance(line, TwoACOp):
-                op = line.op
-                bytecode += self.pushIfLocalOrConst(line.t2)
-                if op == '-':
-                    bytecode += ['ineg']
-                elif op == '!':
-                    bytecode += ['ineg']
-            elif isinstance(line, ThreeAC):
-                bytecode += self.pushIfLocalOrConst(line.t2)
-                bytecode += self.pushIfLocalOrConst(line.t3)
-                op = line.op
-                if op in GET_MNEMONIC_ARITH:
-                    bytecode += [GET_MNEMONIC_ARITH[op]]
-                elif op in GET_MNEMONIC_CMP:
-                    elseLabel = LABEL_GENERATOR.nextLabel()
-                    endLabel = LABEL_GENERATOR.nextLabel()
-                    bytecode += ['{} {}'.format(GET_MNEMONIC_CMP[op], elseLabel)]
-                    bytecode += ['iconst_1', 'goto {}'.format(endLabel)]
-                    bytecode += self.label(elseLabel)
-                    bytecode += ['iconst_0']
-                    bytecode += self.label(endLabel)
-
-            # save result or not
-            if line.t1.status == 'loc':
-                bytecode += [self.putStaticField(line.t1.name, line.type)]
-        return bytecode

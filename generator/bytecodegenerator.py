@@ -6,9 +6,12 @@ from localvartable import LocalVariableTable
 from utils import isRecord
 
 
-class StatementGenerator(JasminBaseGenerator):
+class ByteCodeGenerator(JasminBaseGenerator):
     def __init__(self, ast, gvt):
         """
+        Links middle code of given AST and compiles it to JVM mnemonic bytecode.
+        See Jasmin tool and its syntax for more information.
+
         :type ast: NonTerminalASTNode
         :type gvt: LocalVariableTable
         """
@@ -58,13 +61,13 @@ class StatementGenerator(JasminBaseGenerator):
         return []
 
     def processLine(self, line):
-        # bytecode = self.comment(str(line))
         bytecode = []
         if isinstance(line, CreateRecord):
             bytecode += ['invokespecial Main${}/<init>({})V'.format(
                 line.name,
                 ''.join([self.getType(t) for t in line.types])
             )]
+
         elif isinstance(line, NewRecord):
             bytecode += ['new Main${}'.format(line.name), 'dup']
 
@@ -80,23 +83,23 @@ class StatementGenerator(JasminBaseGenerator):
 
         elif isinstance(line, Push):
             bytecode += self.pushIfLocalOrConst(line.var)
+
         elif isinstance(line, IfEq):
             bytecode += self.pushIfLocalOrConst(line.var)
             bytecode += ['ifeq {}'.format(line.label)]
         elif isinstance(line, IfNe):
             bytecode += self.pushIfLocalOrConst(line.var)
             bytecode += ['ifne {}'.format(line.label)]
+
         elif isinstance(line, Label):
             bytecode += self.label(line.label)
-        elif isinstance(line, TestCondition):
-            bytecode += self.pushIfLocalOrConst(line.var)
-            bytecode += ['ifeq {}'.format(line.label)]
+
         elif isinstance(line, PushBoolConst):
             bytecode += self.push_const('1' if line.f else '0', 'Bool')
+
         elif isinstance(line, GoTo):
             bytecode += ['goto {}'.format(line.label)]
-        elif isinstance(line, WriteLnCall):
-            bytecode += ['invokestatic Main/writeln([Ljava/lang/Object;)V']
+
         elif isinstance(line, AAstore):
             t = line.var.type
             if t == 'Bool':
@@ -118,6 +121,13 @@ class StatementGenerator(JasminBaseGenerator):
                 if line.type == 'Str' or isRecord(line.type):
                     bytecode += ['areturn']
                 bytecode += ['ireturn']
+
+        elif isinstance(line, TestCondition):
+            bytecode += self.pushIfLocalOrConst(line.var)
+            bytecode += ['ifeq {}'.format(line.label)]
+
+        elif isinstance(line, WriteLnCall):
+            bytecode += ['invokestatic Main/writeln([Ljava/lang/Object;)V']
 
         elif isinstance(line, (TwoAC, TwoACOp, ThreeAC)):
             if isinstance(line, TwoAC):
@@ -164,10 +174,3 @@ class StatementGenerator(JasminBaseGenerator):
         bytecode += ['iconst_0']
         bytecode += self.label(notLabel2)
         return bytecode
-
-
-def bodyGenerator(statements, gvt):
-    bc = []
-    for s in statements:
-        bc += StatementGenerator(s, gvt).generate()
-    return bc
