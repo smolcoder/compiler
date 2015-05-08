@@ -145,14 +145,23 @@ class AccessRecordField(MiddleCode):
         return '{} := {} -> {}'.format(self.t1, self.t2, self.t3)
 
 
-class IfNeEq(MiddleCode):
-    def __init__(self, var, label, op):
+class IfEq(MiddleCode):
+    def __init__(self, var, label):
         self.label = label
         self.var = var
-        self.op = op
 
     def __str__(self):
-        return '.if {} {} 0 goto {}'.format(self.var, self.op, self.label)
+        return '.ifeq {} == 0 goto {}'.format(self.var, self.label)
+
+
+class IfNe(MiddleCode):
+    def __init__(self, var, label):
+        self.label = label
+        self.var = var
+
+    def __str__(self):
+        return '.ifne {} != 0 goto {}'.format(self.var, self.label)
+
 
 
 class NewArray(MiddleCode):
@@ -270,16 +279,30 @@ class BuildMiddleCodeListener(BaseASTListener):
             if ast.isUnaryOperation():
                 ast.addCode([TwoACOp(ast.var, op, ast.getLastChild().var, ast.type)])
             else:
-                left = fc.var
-                right = ast.getLastChild().var
+                lAst = fc
+                rAst = ast.getLastChild()
+                left = lAst.var
+                right = rAst.var
+
+                # todo monkey code :(
+                if isinstance(left, Variable) and left.status == 'loc':
+                    lAst.var = self.ng.nextVariable(left.type)
+                    lAst.addCode([TwoAC(lAst.var, left, left.type)])
+                    left = lAst.var
+                if isinstance(right, Variable) and right.status == 'loc':
+                    rAst.var = self.ng.nextVariable(right.type)
+                    rAst.addCode([TwoAC(rAst.var, right, right.type)])
+                    right = rAst.var
+
                 if op in ['&&', '||']:
-                    lAst = fc
-                    rAst = ast.getLastChild()
                     condLabel = LABEL_GENERATOR.nextLabel()
                     endLabel = LABEL_GENERATOR.nextLabel()
-                    jmpOp = '!=' if op == '&&' else '=='
-                    lAst.addCodeAfter([IfNeEq(left, condLabel, jmpOp)])
-                    rAst.addCodeAfter([IfNeEq(right, condLabel, jmpOp)])
+                    if op == '&&':
+                        lAst.addCodeAfter([IfEq(left, condLabel)])
+                        rAst.addCodeAfter([IfEq(right, condLabel)])
+                    else:
+                        lAst.addCodeAfter([IfNe(left, condLabel)])
+                        rAst.addCodeAfter([IfNe(right, condLabel)])
                     const1 = op == '&&'
                     const2 = op == '||'
                     ast.addCodeAfter([PushBoolConst(const1),

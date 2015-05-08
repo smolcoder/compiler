@@ -55,9 +55,12 @@ class ClinitGenerator(JasminBaseGenerator):
             bytecode += ['getfield Main${}/{} {}'.format(line.t2.type, line.t3, self.getType(line.type))]
         elif isinstance(line, Push):
             bytecode += self.pushIfLocalOrConst(line.var)
-        elif isinstance(line, IfNeEq):
+        elif isinstance(line, IfEq):
             bytecode += self.pushIfLocalOrConst(line.var)
-            bytecode += ['if{} {}'.format('ne' if line.op == '!=' else 'eq', line.label)]
+            bytecode += ['ifeq {}'.format(line.label)]
+        elif isinstance(line, IfNe):
+            bytecode += self.pushIfLocalOrConst(line.var)
+            bytecode += ['ifne {}'.format(line.label)]
         elif isinstance(line, Label):
             bytecode += self.label(line.label)
         elif isinstance(line, PushBoolConst):

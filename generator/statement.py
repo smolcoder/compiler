@@ -80,14 +80,17 @@ class StatementGenerator(JasminBaseGenerator):
 
         elif isinstance(line, Push):
             bytecode += self.pushIfLocalOrConst(line.var)
-        elif isinstance(line, IfNeEq):
+        elif isinstance(line, IfEq):
             bytecode += self.pushIfLocalOrConst(line.var)
-            bytecode += ['if{} {}'.format('ne' if line.op == '!=' else 'eq', line.label)]
+            bytecode += ['ifeq {}'.format(line.label)]
+        elif isinstance(line, IfNe):
+            bytecode += self.pushIfLocalOrConst(line.var)
+            bytecode += ['ifne {}'.format(line.label)]
         elif isinstance(line, Label):
             bytecode += self.label(line.label)
         elif isinstance(line, TestCondition):
             bytecode += self.pushIfLocalOrConst(line.var)
-            bytecode += ['ifne {}'.format(line.label)]
+            bytecode += ['ifeq {}'.format(line.label)]
         elif isinstance(line, PushBoolConst):
             bytecode += self.push_const('1' if line.f else '0', 'Bool')
         elif isinstance(line, GoTo):
@@ -125,14 +128,7 @@ class StatementGenerator(JasminBaseGenerator):
                 if op == '-':
                     bytecode += ['ineg']
                 elif op == '!':
-                    notLabel1 = LABEL_GENERATOR.nextLabel()
-                    notLabel2 = LABEL_GENERATOR.nextLabel()
-                    bytecode += ['ifne {}'.format(notLabel1)]
-                    bytecode += ['iconst_1']
-                    bytecode += ['goto {}'.format(notLabel2)]
-                    bytecode += self.label(notLabel1)
-                    bytecode += ['iconst_0']
-                    bytecode += self.label(notLabel2)
+                    bytecode += self.notOperation()
             elif isinstance(line, ThreeAC):
                 bytecode += self.pushIfLocalOrConst(line.t2)
                 bytecode += self.pushIfLocalOrConst(line.t3)
@@ -143,18 +139,30 @@ class StatementGenerator(JasminBaseGenerator):
                     if op in ['==', '!='] and line.t2.type == 'Str' and line.t3.type == 'Str':
                         bytecode += ['invokevirtual java/lang/String/equals(Ljava/lang/Object;)Z']
                         if op == '!=':
-                            bytecode += ['ineg']
+                            bytecode += self.notOperation()
                     else:
                         elseLabel = LABEL_GENERATOR.nextLabel()
                         endLabel = LABEL_GENERATOR.nextLabel()
                         bytecode += ['{} {}'.format(GET_MNEMONIC_CMP[op], elseLabel)]
-                        bytecode += ['iconst_1', 'goto {}'.format(endLabel)]
+                        bytecode += ['iconst_0', 'goto {}'.format(endLabel)]
                         bytecode += self.label(elseLabel)
-                        bytecode += ['iconst_0']
+                        bytecode += ['iconst_1']
                         bytecode += self.label(endLabel)
 
             # save result or not
             bytecode += self.storeIfVar(line.t1)
+        return bytecode
+
+    def notOperation(self):
+        bytecode = []
+        notLabel1 = LABEL_GENERATOR.nextLabel()
+        notLabel2 = LABEL_GENERATOR.nextLabel()
+        bytecode += ['ifne {}'.format(notLabel1)]
+        bytecode += ['iconst_1']
+        bytecode += ['goto {}'.format(notLabel2)]
+        bytecode += self.label(notLabel1)
+        bytecode += ['iconst_0']
+        bytecode += self.label(notLabel2)
         return bytecode
 
 

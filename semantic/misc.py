@@ -53,7 +53,7 @@ def checkReturns(ast):
 
 
 def addLastReturn(body):
-    if not body.getChildren() or body.getLastChild().name != 'return':
+    if not body.getChildren() or body.getLastChild().getFirstChild().name != 'return':
         stmt = NonTerminalASTNode('statement', None)
         stmt.addChild(ReturnASTNode(None))
         body.addChild(stmt)
