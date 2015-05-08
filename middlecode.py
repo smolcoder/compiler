@@ -185,6 +185,16 @@ class AAstore(MiddleCode):
         return 'store {} at {}'.format(self.var, self.index, self.isLast)
 
 
+class PutField:
+    def __init__(self, name, fieldType, recordType):
+        self.name = name
+        self.fieldType = fieldType
+        self.recordType = recordType
+
+    def __str__(self):
+        return 'putfield {}.{} [{}]'.format(self.recordType, self.name, self.fieldType)
+
+
 class TACEntity:
     pass
 
@@ -220,10 +230,10 @@ class Variable(TACEntity):
 class NameGenerator:
     counter = 0
 
-    def nextVariable(self, _type):
+    def nextVariable(self, _type, status='mid'):
         var = '__t{}'.format(self.counter)
         self.counter += 1
-        return Variable(var, _type)
+        return Variable(var, _type, status=status)
 
 
 class LabelGenerator:
@@ -345,7 +355,11 @@ class BuildMiddleCodeListener(BaseASTListener):
         if fc.name == 'Identifier':
             ast.var = Variable(fc.value, ast.type, status='loc')
         elif fc.name == 'recordFieldAccess':
-            ast.var = self.recordAccessCode(fc)
+            if ast.parent.name == 'assignment' and ast.parent.getFirstChild() is ast:
+                prevType, ast.var = self.recordAccessPenultFieldCode(fc)
+                ast.parent.addCodeAfter([PutField(fc.getLastChild().value, ast.var.type, prevType)])
+            else:
+                ast.var = self.recordAccessCode(fc)
 
     def exitAssignment(self, ast):
         left = ast.getFirstChild().var
@@ -436,3 +450,17 @@ class BuildMiddleCodeListener(BaseASTListener):
         leftVar = self.recordAccessCode(fc)
         ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
         return ast.var
+
+    def recordAccessPenultFieldCode(self, ast, prev=None):
+        fc = ast.getFirstChild()
+        if fc.name == 'Identifier':
+            ast.var = Variable(fc.value, fc.parent.type, status='loc')
+            return fc.parent.type, ast.var
+        ast.var = self.ng.nextVariable(ast.type)
+        sc = ast.getLastChild()
+        _, leftVar = self.recordAccessPenultFieldCode(fc, ast)
+        if prev:
+            ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
+        else:
+            ast.addCode([TwoAC(self.ng.nextVariable(ast.type), leftVar, ast.type)])
+        return ast.getFirstChild().type, ast.var

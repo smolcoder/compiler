@@ -112,5 +112,8 @@ fun doNothing():None {
     writeln(a < a + 1);
     writeln(a >= a);
     writeln(a <= a);
-
+    r1.i = 2;
+    writeln(r1.i == 2);
+    r3.r2.r1.s = "new str";
+    writeln(r3.r2.r1.s == "new str");
 }

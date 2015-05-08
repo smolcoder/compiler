@@ -427,12 +427,30 @@ class LLangListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by LLangParser#readlnCall.
-    def enterReadlnCall(self, ctx):
+    # Enter a parse tree produced by LLangParser#readIntCall.
+    def enterReadIntCall(self, ctx):
         pass
 
-    # Exit a parse tree produced by LLangParser#readlnCall.
-    def exitReadlnCall(self, ctx):
+    # Exit a parse tree produced by LLangParser#readIntCall.
+    def exitReadIntCall(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by LLangParser#readStrCall.
+    def enterReadStrCall(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#readStrCall.
+    def exitReadStrCall(self, ctx):
+        pass
+
+
+    # Enter a parse tree produced by LLangParser#readBoolCall.
+    def enterReadBoolCall(self, ctx):
+        pass
+
+    # Exit a parse tree produced by LLangParser#readBoolCall.
+    def exitReadBoolCall(self, ctx):
         pass
 
 

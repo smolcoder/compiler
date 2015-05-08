@@ -19,6 +19,10 @@ class ASTNode:
     def addCode(self, code):
         self.code += code
 
+    def removeLastCodeLine(self):
+        if self.code:
+            self.code = self.code[:-1]
+
     def addCodeAfter(self, code):
         self.codeAfter += code
 

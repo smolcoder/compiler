@@ -240,8 +240,18 @@ class LLangVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by LLangParser#readlnCall.
-    def visitReadlnCall(self, ctx):
+    # Visit a parse tree produced by LLangParser#readIntCall.
+    def visitReadIntCall(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by LLangParser#readStrCall.
+    def visitReadStrCall(self, ctx):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by LLangParser#readBoolCall.
+    def visitReadBoolCall(self, ctx):
         return self.visitChildren(ctx)
 
 

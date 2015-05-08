@@ -77,6 +77,9 @@ class ByteCodeGenerator(JasminBaseGenerator):
             argTypes = [t for _, t in info['args']]
             bytecode += self.invokestatic(line.name, argTypes, retType)
 
+        elif isinstance(line, PutField):
+            bytecode += ['putfield Main${}/{} {}'.format(line.recordType, line.name, self.getType(line.fieldType))]
+
         elif isinstance(line, AccessRecordField):
             bytecode += self.pushIfLocalOrConst(line.t2)
             bytecode += ['getfield Main${}/{} {}'.format(line.t2.type, line.t3, self.getType(line.type))]

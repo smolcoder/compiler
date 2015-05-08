@@ -196,11 +196,21 @@ writelnCall
     ;
 
 readlnStatement
-    : readlnCall ';'
+    : readIntCall ';'
+    | readStrCall ';'
+    | readBoolCall ';'
     ;
 
-readlnCall
-    : READLN '(' leftHandSide (',' leftHandSide)* ')'
+readIntCall
+    : 'readInt' '(' leftHandSide ')'
+    ;
+
+readStrCall
+    : 'readStr' '(' leftHandSide ')'
+    ;
+
+readBoolCall
+    : 'readBool' '(' leftHandSide ')'
     ;
 
 functionInvocationStatement

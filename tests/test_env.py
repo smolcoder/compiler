@@ -36,7 +36,9 @@ class NameCollisionTestCase(BaseTestCase):
         self.assertHasNoError('fun foo(): None {} Int foo;')
 
     def test_build_in(self):
-        self.assertHasError('fun readln():None {}')
+        self.assertHasError('fun readInt():None {}')
+        self.assertHasError('fun readStr():None {}')
+        self.assertHasError('fun readBool():None {}')
         self.assertHasError('fun writeln():None {}')
 
 
@@ -88,7 +90,9 @@ class EnvTestCase(BaseTestCase):
     def test_resolve_build_in(self):
         res = self.compile('{Int a;}')
         var = res.ast.filterByName('variableDeclaration')[0]
-        self.assertIsNotNone(var.getEnv().resolveBuildIn('readln'))
+        self.assertIsNotNone(var.getEnv().resolveBuildIn('readInt'))
+        self.assertIsNotNone(var.getEnv().resolveBuildIn('readStr'))
+        self.assertIsNotNone(var.getEnv().resolveBuildIn('readBool'))
         self.assertIsNotNone(res.ast.getEnv().resolveFunction('writeln'))
 
     def test_lvt_mainblock(self):

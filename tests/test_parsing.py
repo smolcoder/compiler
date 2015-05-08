@@ -15,17 +15,12 @@ class ParsingTestCase(BaseTestCase):
         self.assertHasError('{record Rec{Int a; Int b;}}')
 
     def test_for_with_braces(self):
-        self.assertHasError('{for(Int i = 0; i < 10; i += 1) readln(i);}')
-        self.assertHasNoError('{for(Int i = 0; i < 10; i += 1) {readln(i);}}')
+        self.assertHasError('{for(Int i = 0; i < 10; i += 1) readInt(i);}')
+        self.assertHasNoError('{for(Int i = 0; i < 10; i += 1) {readInt(i);}}')
 
     def test_cortege_with_record(self):
         self.assertHasNoError('[Int, Str, Bool, [Int, Str]] ok;')
         self.assertHasError('[Int, Str, Bool, [Int, Str], SomeRecord] ok;')
-
-    # def test_left_hand_side(self):
-    #     self.assertHasError('{[Int, Int] a; a[1].b = 2;}')
-    #     self.assertHasNoError('record A {[Int, Int] b;} {A a; a.b[1] = 2;}')
-    #     self.assertHasError('fun foo(): [Int, Int] {} {Int i = foo()[0];}')
 
     def test_none_type(self):
         self.assertHasError('None none;')
