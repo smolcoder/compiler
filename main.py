@@ -18,5 +18,5 @@ def main():
         ast = result.ast
         pprintAST(ast)
         print '\n'.join(map(str, result.middleCode))
-        runProgramme(ast, 'Main', 'Main')
+        runProgramme(ast, 'Main', 'Main', args=[1, "str", "true"])
 main()

@@ -202,15 +202,15 @@ readlnStatement
     ;
 
 readIntCall
-    : 'readInt' '(' leftHandSide ')'
+    : 'readInt' '('  ')'
     ;
 
 readStrCall
-    : 'readStr' '(' leftHandSide ')'
+    : 'readStr' '('  ')'
     ;
 
 readBoolCall
-    : 'readBool' '(' leftHandSide ')'
+    : 'readBool' '('  ')'
     ;
 
 functionInvocationStatement
@@ -238,6 +238,9 @@ expression
     | cortegeInitializer
     | recordInitializer
     | leftHandSide
+    | readIntCall
+    | readStrCall
+    | readBoolCall
     ;
 
 assignmentStatement

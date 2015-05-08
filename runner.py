@@ -5,7 +5,7 @@ from utils import jasmin
 from utils import here
 
 
-def runProgramme(ast, filename, classname, jasFilePath=None, out=None):
+def runProgramme(ast, filename, classname, jasFilePath=None, out=None, args=None):
     cg = ClassFileGenerator(classname, ast, filename)
     jasFilePath = jasFilePath or here('sources', 'jas')
     out = out or here('out/')
@@ -17,4 +17,4 @@ def runProgramme(ast, filename, classname, jasFilePath=None, out=None):
         rcg.generateToFile(jasFilePath)
         jasmin(here('sources', 'jas', '{}.j'.format(r)), out=out)
 
-    return java(classname, classpath=out)
+    return java(classname, classpath=out, args=args)

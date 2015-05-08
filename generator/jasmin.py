@@ -60,8 +60,8 @@ class JasminBaseGenerator:
     def istore(self, const):
         return self._arg_opt_command('istore', const)
 
-    def invokestatic(self, name, argTypes, retType):
-        return ['invokestatic Main/{}'.format(self.methodSignature(name, argTypes, retType))]
+    def invokestatic(self, name, argTypes, actualType):
+        return ['invokestatic Main/{}'.format(self.methodSignature(name, argTypes, actualType))]
 
     def methodSignature(self, name, argTypes, retType):
         return '{name}({args}){ret}'.format(

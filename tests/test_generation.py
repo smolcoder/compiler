@@ -33,3 +33,17 @@ class ClinitGeneratorTestCase(BaseTestCase):
 
         finally:
             shutil.rmtree(self.pathToOut)
+
+
+    def test_read(self):
+        os.mkdir(self.pathToOut)
+        try:
+            res = self.compileFile(here('tests', 'source', 'readln.llang'))
+            self.assertFalse(res.errors)
+            self.assertEqual(runProgramme(res.ast, 'Main', 'Main',
+                                          jasFilePath=self.pathToOut,
+                                          out=self.pathToOut,
+                                          args=[1, "str", "true", 2, "str2"]), 0)
+
+        finally:
+            shutil.rmtree(self.pathToOut)

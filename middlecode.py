@@ -134,6 +134,15 @@ class WriteLnCall(MiddleCode):
         return 'call writeln'
 
 
+class ReadCall(MiddleCode):
+    def __init__(self, to, _type=None):
+        self.to = to
+        self.type = _type or to.type
+
+    def __str__(self):
+        return 'call read {}'.format(self.type)
+
+
 class AccessRecordField(MiddleCode):
     def __init__(self, t1, t2, t3, _type):
         self.t1 = t1
@@ -283,6 +292,8 @@ class BuildMiddleCodeListener(BaseASTListener):
             else:
                 ast.var = fc.var
         elif fc.name == 'functionInvocation':
+            ast.var = fc.var
+        elif fc.name in ['readIntCall', 'readStrCall', 'readBoolCall']:
             ast.var = fc.var
         elif op:
             ast.var = self.ng.nextVariable(ast.type)
@@ -439,6 +450,18 @@ class BuildMiddleCodeListener(BaseASTListener):
         if block:
             block.addCodeBefore(['.start main'])
             block.addCodeAfter(['.end main'])
+
+    def exitReadIntCall(self, ast):
+        ast.var = self.ng.nextVariable(ast.type)
+        ast.addCode([ReadCall(ast.var)])
+
+    def exitReadBoolCall(self, ast):
+        ast.var = self.ng.nextVariable(ast.type)
+        ast.addCode([ReadCall(ast.var)])
+
+    def exitReadStrCall(self, ast):
+        ast.var = self.ng.nextVariable(ast.type)
+        ast.addCode([ReadCall(ast.var)])
 
     def recordAccessCode(self, ast):
         fc = ast.getFirstChild()

@@ -75,19 +75,13 @@ class TypeCheckListener(BaseASTListener):
         ast.type = ast.getFirstChild().type
 
     def exitReadIntCall(self, ast):
-        to = ast.getFirstChild()
-        if to.type != 'Int':
-            self.errors.append(TypeMismatchError(to.source, 'Int != {}'.format(to.type)))
+        ast.type = 'Int'
 
     def exitReadStrCall(self, ast):
-        to = ast.getFirstChild()
-        if to.type != 'Str':
-            self.errors.append(TypeMismatchError(to.source, 'Str != {}'.format(to.type)))
+        ast.type = 'Str'
 
     def exitReadBoolCall(self, ast):
-        to = ast.getFirstChild()
-        if to.type != 'Bool':
-            self.errors.append(TypeMismatchError(to.source, 'Bool != {}'.format(to.type)))
+        ast.type = 'Bool'
 
     def exitExpressionList(self, ast):
         ast.type = []

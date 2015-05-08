@@ -19,6 +19,11 @@ class ClinitGenerator(ByteCodeGenerator):
             if self.gvt.get(v)['ast'].getLastChild().name != 'expression':
                 continue
             bytecode += self.processVarDec(self.gvt.get(v))
+        bytecode += ['new java/util/Scanner',
+                     'dup',
+                     'getstatic java/lang/System/in Ljava/io/InputStream;',
+                     'invokespecial java/util/Scanner/<init>(Ljava/io/InputStream;)V',
+                     'putstatic Main/__inner__in Ljava/util/Scanner;']
         bytecode += ['return', '.end method']
         return bytecode
 

@@ -15,8 +15,8 @@ class ParsingTestCase(BaseTestCase):
         self.assertHasError('{record Rec{Int a; Int b;}}')
 
     def test_for_with_braces(self):
-        self.assertHasError('{for(Int i = 0; i < 10; i += 1) readInt(i);}')
-        self.assertHasNoError('{for(Int i = 0; i < 10; i += 1) {readInt(i);}}')
+        self.assertHasError('{for(Int i = 0; i < 10; i += 1) readInt();}')
+        self.assertHasNoError('{for(Int i = 0; i < 10; i += 1) {readInt();}}')
 
     def test_cortege_with_record(self):
         self.assertHasNoError('[Int, Str, Bool, [Int, Str]] ok;')

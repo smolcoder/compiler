@@ -1,0 +1,31 @@
+record R1 {
+    Int i;
+    Str s;
+    Bool b;
+}
+
+record R2 {
+    R1 r1;
+}
+
+record R3 {
+    Int i;
+    R2 r2;
+}
+
+R1 r1 = new R1(s="s", i=1, b=true);
+
+{
+    R2 r2 = new R2(r1=r1);
+    r2.r1.i = readInt();
+    r2.r1.s = readStr();
+    r2.r1.b = readBool();
+    Int i = readInt();
+    Str s;
+    s = readStr();
+    writeln(r2.r1.i == 1);
+    writeln(r2.r1.s == "str");
+    writeln(r2.r1.b == true);
+    writeln(i == 2);
+    writeln(s == "str2");
+}

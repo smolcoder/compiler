@@ -1,6 +1,7 @@
 from generator.bytecodegenerator import ByteCodeGenerator
 from generator.clinit import ClinitGenerator
 from generator.jasmin import JasminBaseGenerator
+from generator.readType import generateReads
 from generator.writeln import generateWriteLn
 from utils import here
 
@@ -23,10 +24,16 @@ class ClassFileGenerator(JasminBaseGenerator):
         bytecode += self.comment('')
         for f in self.gEnv.varOrder:
             bytecode += self.staticField(f, self.gEnv.resolveVariable(f)['type'])
+
+        bytecode += ['.field static __inner__in Ljava/util/Scanner;']
+
         bytecode += self.comment('')
         bytecode += self.mainInit()
         bytecode += self.comment('')
         bytecode += generateWriteLn()
+        bytecode += self.comment('')
+
+        bytecode += generateReads()
         bytecode += self.comment('')
 
         for f in self.gEnv.functions.values():

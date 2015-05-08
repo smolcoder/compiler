@@ -71,6 +71,9 @@ class ByteCodeGenerator(JasminBaseGenerator):
         elif isinstance(line, NewRecord):
             bytecode += ['new Main${}'.format(line.name), 'dup']
 
+        elif isinstance(line, ReadCall):
+            bytecode += self.invokestatic('read{}'.format(line.type), [], line.type)
+
         elif isinstance(line, CallFunction):
             info = self.gEnv.resolveFunction(line.name)
             retType = info['type']

@@ -74,7 +74,7 @@ fun gcd(a:Int, b:Int):Int {
         a = b;
         b = t;
     }
-    if (b <= 1) {
+    if (b == 0) {
         return a;
     }
     return gcd(b, a % b);
@@ -116,4 +116,21 @@ fun doNothing():None {
     writeln(r1.i == 2);
     r3.r2.r1.s = "new str";
     writeln(r3.r2.r1.s == "new str");
+
+    Int d = 1;
+    Str sDay;
+    if (d == 1) {
+        sDay = "Monday";
+    } elif (d == 2) {
+        sDay = "Tuesday";
+    } elif (d == 3) {
+        sDay = "Wednesday";
+    } else {
+        sDay = "-";
+    }
+    writeln(sDay == "Monday");
+
+    writeln(gcd(27, 4) == 1);
+    writeln(gcd(25, 5) == 5);
+    writeln(gcd(27, 18) == 9);
 }

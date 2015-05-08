@@ -11,9 +11,9 @@ class Env:
         self.variables = {}  # variables (name, type)
         self.varOrder = []
         self.build_ins = {
-            'readInt': {'returnType': 'None'},
-            'readStr': {'returnType': 'None'},
-            'readBool': {'returnType': 'None'},
+            'readInt': {'returnType': 'Int'},
+            'readStr': {'returnType': 'Str'},
+            'readBool': {'returnType': 'Bool'},
             'writeln': {'returnType': 'None'},
         }
 

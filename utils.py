@@ -54,9 +54,11 @@ def jasmin(jasFile, pathToJar=None, out=None):
                                           out or here('out'), jasFile))
 
 
-def java(name, classpath=None):
-    cmd = "java -classpath {} {}".format(classpath or here('out'), name)
-    # print 'Run {}: {}'.format(name, cmd)
+def java(name, classpath=None, args=None):
+    cmd = "echo {} | java -classpath {} {} ".format(' '.join(map(str, args or [])),
+                                                    classpath or here('out'),
+                                                    name)
+    print 'Run {}: {}'.format(name, cmd)
     print '_________________________________________'
     return os.system(cmd)
 
