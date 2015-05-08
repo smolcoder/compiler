@@ -1,5 +1,5 @@
 from ast import NonTerminalASTNode, walkAST
-from middlecode import BuildMiddleCodeListener
+from intermediate import BuildMiddleCodeListener
 
 
 class MiddleCodeLinker:

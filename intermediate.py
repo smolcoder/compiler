@@ -1,12 +1,12 @@
 from ast import CYCLES, BaseASTListener, TerminalASTNode
 
 
-class MiddleCode:
+class IntermediateCode:
     def __repr__(self):
         return str(self)
 
 
-class ThreeAC(MiddleCode):
+class ThreeAC(IntermediateCode):
     def __init__(self, t1, t2, op, t3, resType, ast=None):
         self.t1 = t1
         self.t2 = t2
@@ -19,7 +19,7 @@ class ThreeAC(MiddleCode):
         return '{} := {} {} {}'.format(self.t1, self.t2, self.op, self.t3)
 
 
-class TwoAC(MiddleCode):
+class TwoAC(IntermediateCode):
     def __init__(self, t1, t2, resType, ast=None):
         self.t1 = t1
         self.t2 = t2
@@ -30,7 +30,7 @@ class TwoAC(MiddleCode):
         return '{} := {}'.format(self.t1, self.t2)
 
 
-class TwoACOp(MiddleCode):
+class TwoACOp(IntermediateCode):
     def __init__(self, t1, op, t2, resType, ast=None):
         self.t1 = t1
         self.op = op
@@ -42,7 +42,7 @@ class TwoACOp(MiddleCode):
         return '{} := {} {}'.format(self.t1, self.op, self.t2)
 
 
-class Label(MiddleCode):
+class Label(IntermediateCode):
     def __init__(self, label):
         self.label = label
 
@@ -50,7 +50,7 @@ class Label(MiddleCode):
         return '.label {}'.format(self.label)
 
 
-class Push(MiddleCode):
+class Push(IntermediateCode):
     def __init__(self, variable):
         self.var = variable
 
@@ -58,7 +58,7 @@ class Push(MiddleCode):
         return '.push {}'.format(self.var)
 
 
-class PushBoolConst(MiddleCode):
+class PushBoolConst(IntermediateCode):
     def __init__(self, f):
         self.f = f
 
@@ -66,7 +66,7 @@ class PushBoolConst(MiddleCode):
         return '.push {}'.format(self.f)
 
 
-class TestCondition(MiddleCode):
+class TestCondition(IntermediateCode):
     def __init__(self, var, label):
         """
         :type var: Variable
@@ -78,7 +78,7 @@ class TestCondition(MiddleCode):
         return '.if {} is FALSE then goto {}'.format(self.var, self.label)
 
 
-class Return(MiddleCode):
+class Return(IntermediateCode):
     def __init__(self, _type, var=None):
         """
         :type var: Variable
@@ -92,7 +92,7 @@ class Return(MiddleCode):
         return 'return'
 
 
-class GoTo(MiddleCode):
+class GoTo(IntermediateCode):
     def __init__(self, label):
         self.label = label
 
@@ -100,7 +100,7 @@ class GoTo(MiddleCode):
         return '.goto {}'.format(self.label)
 
 
-class CreateRecord(MiddleCode):
+class CreateRecord(IntermediateCode):
     def __init__(self, var, name, types):
         self.t1 = var
         self.name = name
@@ -110,7 +110,7 @@ class CreateRecord(MiddleCode):
         return '{} := .create {}'.format(self.t1, self.name)
 
 
-class NewRecord(MiddleCode):
+class NewRecord(IntermediateCode):
     def __init__(self, name):
         self.name = name
 
@@ -118,7 +118,7 @@ class NewRecord(MiddleCode):
         return '.new {}'.format(self.name)
 
 
-class CallFunction(MiddleCode):
+class CallFunction(IntermediateCode):
     def __init__(self, var, name, rType, argTypes):
         self.var = var
         self.name = name
@@ -129,12 +129,12 @@ class CallFunction(MiddleCode):
         return '{} := .call {}'.format(self.var, self.name)
 
 
-class WriteLnCall(MiddleCode):
+class WriteLnCall(IntermediateCode):
     def __str__(self):
         return 'call writeln'
 
 
-class ReadCall(MiddleCode):
+class ReadCall(IntermediateCode):
     def __init__(self, to, _type=None):
         self.to = to
         self.type = _type or to.type
@@ -143,7 +143,7 @@ class ReadCall(MiddleCode):
         return 'call read {}'.format(self.type)
 
 
-class AccessRecordField(MiddleCode):
+class AccessRecordField(IntermediateCode):
     def __init__(self, t1, t2, t3, _type):
         self.t1 = t1
         self.t2 = t2
@@ -154,7 +154,7 @@ class AccessRecordField(MiddleCode):
         return '{} := {} -> {}'.format(self.t1, self.t2, self.t3)
 
 
-class IfEq(MiddleCode):
+class IfEq(IntermediateCode):
     def __init__(self, var, label):
         self.label = label
         self.var = var
@@ -163,7 +163,7 @@ class IfEq(MiddleCode):
         return '.ifeq {} == 0 goto {}'.format(self.var, self.label)
 
 
-class IfNe(MiddleCode):
+class IfNe(IntermediateCode):
     def __init__(self, var, label):
         self.label = label
         self.var = var
@@ -173,7 +173,7 @@ class IfNe(MiddleCode):
 
 
 
-class NewArray(MiddleCode):
+class NewArray(IntermediateCode):
     def __init__(self, size):
         self.size = size
 
@@ -181,7 +181,7 @@ class NewArray(MiddleCode):
         return 'new array of size {}'.format(self.size)
 
 
-class AAstore(MiddleCode):
+class AAstore(IntermediateCode):
     def __init__(self, var, index, isLast=False):
         """
         :type var: Variable

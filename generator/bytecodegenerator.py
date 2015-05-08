@@ -1,7 +1,7 @@
 from ast import NonTerminalASTNode
 from generator.jasmin import JasminBaseGenerator, GET_MNEMONIC_CMP, GET_MNEMONIC_ARITH
 from generator.linker import linkCode
-from middlecode import *
+from intermediate import *
 from localvartable import LocalVariableTable
 from utils import isRecord
 

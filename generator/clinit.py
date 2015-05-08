@@ -1,8 +1,5 @@
 from generator.bytecodegenerator import ByteCodeGenerator
-from generator.jasmin import GET_MNEMONIC_CMP, GET_MNEMONIC_ARITH
 from generator.linker import linkCode
-from middlecode import *
-from utils import isRecord
 from ast.nodes import ProgrammeASTNode
 
 
