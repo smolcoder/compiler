@@ -8,7 +8,7 @@ from grammar.gen.LLangLexer import LLangLexer
 from grammar.gen.LLangParser import LLangParser
 from semantic import checkOnlyOneOuterJustBlock
 from semantic.existencechecker import checkExistence
-from semantic.misc import normalizeRecordInitializer
+from semantic.misc import normalizeRecordInitializer, checkReturns
 from semantic.optimizations import precalculateConstants
 from semantic.typechecker import typeCheck
 
@@ -66,6 +66,10 @@ class Compiler:
         typeErrors = self.typeCheck(ast, globalEnv)
         if typeErrors:
             return CompilerResult(ast=ast, globalEnv=globalEnv, errors=typeErrors)
+
+        returnErrors = checkReturns(ast)
+        if returnErrors:
+            return CompilerResult(ast=ast, globalEnv=globalEnv, errors=returnErrors)
 
         normalizeRecordInitializer(ast)
 

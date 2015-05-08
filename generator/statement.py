@@ -58,7 +58,8 @@ class StatementGenerator(JasminBaseGenerator):
         return []
 
     def processLine(self, line):
-        bytecode = self.comment(str(line))
+        # bytecode = self.comment(str(line))
+        bytecode = []
         if isinstance(line, CreateRecord):
             bytecode += ['invokespecial Main${}/<init>({})V'.format(
                 line.name,
@@ -86,7 +87,7 @@ class StatementGenerator(JasminBaseGenerator):
             bytecode += self.label(line.label)
         elif isinstance(line, TestCondition):
             bytecode += self.pushIfLocalOrConst(line.var)
-            bytecode += ['ifeq {}'.format(line.label)]
+            bytecode += ['ifne {}'.format(line.label)]
         elif isinstance(line, PushBoolConst):
             bytecode += self.push_const('1' if line.f else '0', 'Bool')
         elif isinstance(line, GoTo):
@@ -124,7 +125,14 @@ class StatementGenerator(JasminBaseGenerator):
                 if op == '-':
                     bytecode += ['ineg']
                 elif op == '!':
-                    bytecode += ['ineg']
+                    notLabel1 = LABEL_GENERATOR.nextLabel()
+                    notLabel2 = LABEL_GENERATOR.nextLabel()
+                    bytecode += ['ifne {}'.format(notLabel1)]
+                    bytecode += ['iconst_1']
+                    bytecode += ['goto {}'.format(notLabel2)]
+                    bytecode += self.label(notLabel1)
+                    bytecode += ['iconst_0']
+                    bytecode += self.label(notLabel2)
             elif isinstance(line, ThreeAC):
                 bytecode += self.pushIfLocalOrConst(line.t2)
                 bytecode += self.pushIfLocalOrConst(line.t3)
@@ -132,13 +140,18 @@ class StatementGenerator(JasminBaseGenerator):
                 if op in GET_MNEMONIC_ARITH:
                     bytecode += [GET_MNEMONIC_ARITH[op]]
                 elif op in GET_MNEMONIC_CMP:
-                    elseLabel = LABEL_GENERATOR.nextLabel()
-                    endLabel = LABEL_GENERATOR.nextLabel()
-                    bytecode += ['{} {}'.format(GET_MNEMONIC_CMP[op], elseLabel)]
-                    bytecode += ['iconst_1', 'goto {}'.format(endLabel)]
-                    bytecode += self.label(elseLabel)
-                    bytecode += ['iconst_0']
-                    bytecode += self.label(endLabel)
+                    if op in ['==', '!='] and line.t2.type == 'Str' and line.t3.type == 'Str':
+                        bytecode += ['invokevirtual java/lang/String/equals(Ljava/lang/Object;)Z']
+                        if op == '!=':
+                            bytecode += ['ineg']
+                    else:
+                        elseLabel = LABEL_GENERATOR.nextLabel()
+                        endLabel = LABEL_GENERATOR.nextLabel()
+                        bytecode += ['{} {}'.format(GET_MNEMONIC_CMP[op], elseLabel)]
+                        bytecode += ['iconst_1', 'goto {}'.format(endLabel)]
+                        bytecode += self.label(elseLabel)
+                        bytecode += ['iconst_0']
+                        bytecode += self.label(endLabel)
 
             # save result or not
             bytecode += self.storeIfVar(line.t1)

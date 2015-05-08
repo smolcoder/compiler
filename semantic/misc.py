@@ -1,4 +1,5 @@
-from ast import BaseASTListener, walkAST
+from ast import BaseASTListener, walkAST, NonTerminalASTNode, ReturnASTNode
+from errors import TypeMismatchError, CompilerError
 
 
 class NormalizeRecordInitializerListener(BaseASTListener):
@@ -21,15 +22,38 @@ def normalizeRecordInitializer(ast):
     walkAST(l, ast)
 
 
-# class AlreadyDefinedListener(BaseASTListener):
-#     def __init__(self):
-#         self.scopes = []
-#
-#     def resolve(self, name):
-#         for
-#
-#     def enterFunctionDeclaration(self, ast):
-#         self.scopes.append({})
-#
-#     def exitFunctionDeclaration(self, ast):
-#         self.scopes.append({})
+def checkReturns(ast):
+    functions = ast.filterByName('functionDeclaration')
+    errors = []
+
+    for f in functions:
+        _type = f.getFirstChild().getReturnType()
+        returns = f.filterByName('return')
+        if _type != 'None' and not returns:
+            errors.append(CompilerError('Return statement is missed.', source=f.source))
+        for r in returns:
+            if r.getType() != _type:
+                errors.append(TypeMismatchError(r.source, msg='bad return type: {} != {}'.format(r.getType(), _type)))
+        body = f.getLastChild()
+        if _type == 'None':
+            addLastReturn(body)
+
+    if ast.getJustBlock():
+        mainBlock = ast.getJustBlock().getFirstChild()
+        returns = mainBlock.filterByName('return')
+        for r in returns:
+            if r.getType() != 'None':
+                errors.append(TypeMismatchError(r.source, msg='return from main block is not None'))
+    else:
+        justBlock = NonTerminalASTNode('justBlock', None)
+        mainBlock = NonTerminalASTNode('block', None)
+        justBlock.addChild(mainBlock)
+    addLastReturn(mainBlock)
+    return errors
+
+
+def addLastReturn(body):
+    if not body.getChildren() or body.getLastChild().name != 'return':
+        stmt = NonTerminalASTNode('statement', None)
+        stmt.addChild(ReturnASTNode(None))
+        body.addChild(stmt)

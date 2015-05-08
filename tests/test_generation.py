@@ -21,3 +21,15 @@ class ClinitGeneratorTestCase(BaseTestCase):
 
         finally:
             shutil.rmtree(self.pathToOut)
+
+    def test_big(self):
+        os.mkdir(self.pathToOut)
+        try:
+            res = self.compileFile(here('tests', 'source', 'big.llang'))
+            self.assertFalse(res.errors)
+            self.assertEqual(runProgramme(res.ast, 'Main', 'Main',
+                                          jasFilePath=self.pathToOut,
+                                          out=self.pathToOut), 0)
+
+        finally:
+            shutil.rmtree(self.pathToOut)

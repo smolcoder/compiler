@@ -90,6 +90,9 @@ class ASTBuildListener(LLangListener):
             ctx.ast = NonTerminalASTNode('literal', oldAst.source)
             ctx.ast.addChild(oldAst.getFirstChild())
 
+    def enterReturnExpr(self, ctx):
+        ctx.ast = ReturnASTNode(getSource(ctx))
+
     def exitVoidType(self, ctx):
         ctx.ast = PrimitiveTypeASTNode(getSource(ctx), ctx.ast.getDeepest().value)
 

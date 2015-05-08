@@ -234,18 +234,12 @@ class BuildMiddleCodeListener(BaseASTListener):
         self.globalEnv = globalEnv
         self.ng = NameGenerator()
 
-    def exitReturnExpr(self, ast):
+    def exitReturn(self, ast):
         if not ast.getChildren():
             ast.addCode([Return('None')])
         else:
             var = ast.getFirstChild().var
             ast.addCode([Return(var.type, var)])
-
-    # def exitJustBlock(self, ast):
-    #     if ast.parent.name != 'Programme' or not ast.getChildren():
-    #         return
-    #     if ast.getFirstChild().getLastChild().getFirstChild().name != 'returnStatement':
-    #         ast.addCodeAfter([Return()])
 
     def exitExpression(self, ast):
         # todo refactoring is needed
@@ -283,7 +277,7 @@ class BuildMiddleCodeListener(BaseASTListener):
                     rAst = ast.getLastChild()
                     condLabel = LABEL_GENERATOR.nextLabel()
                     endLabel = LABEL_GENERATOR.nextLabel()
-                    jmpOp = '==' if op == '&&' else '!='
+                    jmpOp = '!=' if op == '&&' else '=='
                     lAst.addCodeAfter([IfNeEq(left, condLabel, jmpOp)])
                     rAst.addCodeAfter([IfNeEq(right, condLabel, jmpOp)])
                     const1 = op == '&&'

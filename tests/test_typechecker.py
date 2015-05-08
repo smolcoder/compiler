@@ -91,9 +91,8 @@ class TypeCheckerTestCase(BaseTestCase):
         self.assertHasError('{Int result; result >= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
         self.assertHasError('{Int result; result <= 1 + 2 * (3 + 4) - -5 / 6 % 7;}')
 
-        self.assertHasNoError('fun foo(a: Int, b: Str): Int {} {Int i = -foo(1, "str") * 1;}')
+        self.assertHasNoError('fun foo(a: Int, b: Str): Int {return 0;} {Int i = -foo(1, "str") * 1;}')
         self.assertHasError('fun foo(a: Int, b: Str): [Int] {} {[Int, Int] i = foo(1, "str");}')
-        self.assertHasNoError('fun foo(a: Int, b: Str): [Int, Int] {} {[Int, Int] i = foo(1, "str");}')
 
     def test_fun_arg_types(self):
         self.assertHasNoError('fun foo():None{} {foo();}')
@@ -142,7 +141,7 @@ class TypeCheckerTestCase(BaseTestCase):
                             '{foo(new Rec(a=1, b="str", c=[2, [false]], d=3));}')
 
     def test_if_statement(self):
-        self.assertHasNoError('fun foo():Bool {}'
+        self.assertHasNoError('fun foo():Bool {return false;}'
                               '{Bool f;'
                               'if (foo() && f) {} '
                               'elif (3 > 4) {} '
@@ -198,4 +197,14 @@ class TypeCheckerTestCase(BaseTestCase):
         self.assertHasError('fun foo(i: Int):Int {} {for (Int i = 1; foo(i); i *= 5) {}}')
         self.assertHasError('fun foo(i: Int):Str {} {for (Int i = 1; foo(i); i *= 5) {}}')
         self.assertHasError('fun foo(i: Int):[Bool] {} {for (Int i = 1; foo(i); i *= 5) {}}')
-        self.assertHasNoError('fun foo(i: Int):Bool {} {for (Int i = 1; foo(i); i *= 5) {}}')
+        self.assertHasNoError('fun foo(i: Int):Bool {return false;} {for (Int i = 1; foo(i); i *= 5) {}}')
+
+    def test_return_type(self):
+        self.assertHasError('fun foo():None {return 3;}')
+        self.assertHasNoError('fun foo():None {}')
+        self.assertHasError('fun foo():Str {}')
+        self.assertHasError('fun foo():Int {return;}')
+
+        self.assertHasNoError('{}')
+        self.assertHasError('{return 3;}')
+        self.assertHasNoError('{if(true){return;}}')

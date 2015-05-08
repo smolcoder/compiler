@@ -69,7 +69,7 @@ class ClassFileGenerator(JasminBaseGenerator):
               '.limit locals 100']
         main = bodyGenerator(self.mainBlock.getFirstChild().getChildrenByName('statement'), self.gvt) \
             if self.mainBlock else []
-        bc += main or ['return']
+        bc += main
         bc += ['.end method']
         return bc
 

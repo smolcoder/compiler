@@ -17,7 +17,7 @@ def main():
         result.printErrors()
     else:
         ast = result.ast
-        # pprintAST(ast)
+        pprintAST(ast)
         print '\n'.join(map(str, result.middleCode))
         print '_' * 50
         bc = bodyGenerator(ast.getJustBlock().getFirstChild().getChildrenByName('statement'), ast.lvt)

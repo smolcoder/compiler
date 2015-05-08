@@ -42,8 +42,8 @@ class Env:
     def resolveBuildIn(self, name):
         return self.build_ins.get(name)
 
-    def generateLocalVariableTable(self):
-        lvt = LocalVariableTable()
+    def generateLocalVariableTable(self, startFrom=0):
+        lvt = LocalVariableTable(startFrom)
         for v in self.varOrder:
             lvt.put(v, _type=self.variables[v]['type'], ast=self.variables[v]['ast'])
         return lvt
@@ -171,8 +171,8 @@ def createVariableTables(ast):
     block = ast.getJustBlock()
     ast.lvt = ast.env.generateLocalVariableTable()
     if block:
-        block.lvt = block.getEnv().generateLocalVariableTable()
-        block.lvt.put('__internal__args', '[Ljava/lang/String;')
+        block.lvt = block.getEnv().generateLocalVariableTable(1)
+        block.lvt.put('__internal__args', '[Ljava/lang/String;', number=0)
         populateLVT(block.lvt, block)
     for name in ast.env.functions:
         a = ast.env.resolveFunction(name)['ast']

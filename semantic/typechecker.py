@@ -122,6 +122,8 @@ class TypeCheckListener(BaseASTListener):
 
         if chCount == 1:
             ast.type = ast.getFirstChild().type
+            if ast.type == 'None' and ast.parent.name == 'argumentList':
+                self.errors.append(TypeMismatchError(ast.source, msg='argument list can not take None type'))
             return
         if op.name == 'UnaryOperator':
             t = ast.getChild(1).type

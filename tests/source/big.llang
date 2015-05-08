@@ -1,0 +1,102 @@
+record R1 {
+    Int i;
+    Str s;
+    Bool b;
+}
+
+record R2 {
+    R1 r1;
+}
+
+record R3 {
+    Int i;
+    R2 r2;
+}
+
+Int i1 = 1;
+Int i2 = 1 + 3;
+Int i3 = (3 + i1) * i2 / i2 - i1;
+Int i4 = i2;
+
+Bool f1 = true;
+Bool f2 = f1 && false;
+Bool f3 = (f1 || false) && f2 == true;
+Bool f4 = !f1 && false || (f2 && f1) == false;
+
+Str s = "string";
+
+R1 r1 = new R1(s="s", i=1, b=true);
+R1 r11 = new R1(s=s, i=i1 * (1 + 5) - i2 / i3 - 1000000, b=!((f1 || !f2) && f3));
+
+R2 r2 = new R2(r1=r1);
+R2 r21 = new R2(r1=r11);
+
+R3 r3 = new R3(i=4, r2=r2);
+R3 r31 = new R3(i=i3, r2=r21);
+
+fun factorial(i:Int):Int {
+    if (i == 1) {
+        return i;
+    }
+    return i * factorial(i - 1);
+}
+
+fun getStr():Str {
+    return "typical string";
+}
+
+fun getR():R1 {
+    return r1;
+}
+
+
+fun printInfo(r:R1):None {
+    writeln(r.i, r.s, r.b);
+}
+
+fun pow(n:Int, k:Int):Int {
+    Int r = 1;
+    while (k > 0) {
+        if (k % 2 == 1) {
+            r *= n;
+            k -= 1;
+        } else {
+            r *= r;
+            k /= 2;
+        }
+    }
+    return r;
+}
+
+fun gcd(a:Int, b:Int):Int {
+    if (a < b) {
+        Int t = a;
+        a = b;
+        b = t;
+    }
+    if (b <= 1) {
+        return a;
+    }
+    return gcd(b, a % b);
+}
+
+fun doNothing():None {
+    pass;
+}
+
+{
+    writeln("Hello, world!");
+    writeln("I can write something on the screen taking varargs separating all arguments by whitespace.");
+    writeln(1, factorial(5), new R1(s=s, i=i1 * (1 + 5) - i2 / i3 - 1000000, b=!((f1 || !f2) && f3)));
+    for (Int i = 0; i < 100; i += 7) {
+        writeln("gcd", i, "and", 15, "is", gcd(i, 15));
+    }
+
+    Str day = "day";
+    writeln(day == "day");
+    writeln(factorial(5) == 120);
+    Bool f1 = true;
+    Bool f2 = false;
+    writeln(!(f1 && f2) == ((!f1) || (!f2)));
+
+}

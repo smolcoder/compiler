@@ -366,3 +366,13 @@ class ElifBlockASTNode(NonTerminalASTNode):
 
     def getBlock(self):
         return self.getFirstChildByName('justBlock').getFirstChild()
+
+
+class ReturnASTNode(NonTerminalASTNode):
+    def __init__(self, source):
+        NonTerminalASTNode.__init__(self, 'return', source)
+
+    def getType(self):
+        if self.getChildren():
+            return self.getFirstChild().type
+        return 'None'

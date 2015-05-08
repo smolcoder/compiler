@@ -1,23 +1,27 @@
 class LocalVariableTable:
-    def __init__(self):
+    def __init__(self, startFrom=0):
         self.table = {}
         self.reversed_table = {}
-        self.counter = 0
+        self.counter = startFrom
 
-    def put(self, name, _type=None, ast=None):
+    def put(self, name, _type=None, ast=None, number=None):
         """
         :rtype: str
         """
+        if number is None:
+            n = self.counter
+            self.counter += 1
+        else:
+            n = number
         if name in self.table:
             return None, None
         self.table[name] = {
-            'number': self.counter,
+            'number': n,
             'type': _type,
             'ast': ast,
             'name': name
         }
-        self.reversed_table[self.counter] = name
-        self.counter += 1
+        self.reversed_table[n] = name
         return name
 
     def putInternal(self, _type, ast):
