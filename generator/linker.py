@@ -1,5 +1,5 @@
 from ast import NonTerminalASTNode, walkAST
-from intermediate import BuildMiddleCodeListener
+from intermediate import BuildMiddleCodeListener, adjustIntermediateCode, optimize
 
 
 class MiddleCodeLinker:
@@ -40,4 +40,6 @@ def linkCode(ast):
 def makeTAC(ast):
     l = BuildMiddleCodeListener(ast.getGlobalEnv())
     walkAST(l, ast)
+    optimize(ast)
+    adjustIntermediateCode(ast)
     return linkCode(ast)

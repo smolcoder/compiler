@@ -1,5 +1,5 @@
-from pprint import pprint
 from ast import CYCLES, BaseASTListener, TerminalASTNode, walkAST
+from localvartable import LocalVariableTable
 
 
 class IntermediateCode:
@@ -517,16 +517,21 @@ class ExtractBaseBlockListener(BaseASTListener):
 
 def optimize(ast):
     bbs = extractBaseBlocks(ast)
-    opt = OptimizerListener()
     for bb in bbs:
         cache = {}
         rCache = {}
+        opt = OptimizerListener(bb[0].getLVT())
         for statement in bb:
             walkAST(opt, statement, cache, rCache)
-            pprint(cache)
 
 
 class OptimizerListener(BaseASTListener):
+    def __init__(self, lvt):
+        """
+        :type lvt: LocalVariableTable
+        """
+        self.lvt = lvt
+
     def getId(self, var):
         return var.name if isinstance(var, Variable) else str(var)
 
@@ -571,6 +576,7 @@ class OptimizerListener(BaseASTListener):
         else:
             var = cache[text]
             var.status = 'loc'
+            self.lvt.put(var.name, var.type, ast)
             ast.var.link = var
 
     def removeFromCaches(self, var, cache, rCache):
@@ -585,3 +591,27 @@ class OptimizerListener(BaseASTListener):
     def exitAssignment(self, ast, cache, rCache):
         dirty = self.getId(ast.getFirstChild().var)
         self.removeFromCaches(dirty, cache, rCache)
+
+
+class RemoveAllIntermediateListener(BaseASTListener):
+    def enterEvery(self, ast):
+        ast.code = []
+        ast.codeAfter = []
+        ast.codeBefore = []
+        ast.var = None
+
+
+class AdjustIntermediateListener(BaseASTListener):
+    def enterExpression(self, ast):
+        op = ast.getOperator().value if ast.getOperator() else None
+        var = ast.var
+        if not op or not isinstance(var, Variable) or not var.link:
+            return
+        l = RemoveAllIntermediateListener()
+        walkAST(l, ast)
+        ast.var = var.link
+
+
+def adjustIntermediateCode(ast):
+    l = AdjustIntermediateListener()
+    walkAST(l, ast)

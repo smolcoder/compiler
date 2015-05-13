@@ -45,6 +45,8 @@ class ByteCodeGenerator(JasminBaseGenerator):
         """
         if isinstance(var, Const):
             return self.push_const(var.value, var.type)
+        if var.link:
+            return self.pushIfLocalOrConst(var.link)
         if var.status == 'loc':
             info = self.gvt.get(var.name)
             if info:
