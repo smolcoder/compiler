@@ -1,4 +1,5 @@
-from ast import CYCLES, BaseASTListener, TerminalASTNode
+from pprint import pprint
+from ast import CYCLES, BaseASTListener, TerminalASTNode, walkAST
 
 
 class IntermediateCode:
@@ -172,7 +173,6 @@ class IfNe(IntermediateCode):
         return '.ifne {} != 0 goto {}'.format(self.var, self.label)
 
 
-
 class NewArray(IntermediateCode):
     def __init__(self, size):
         self.size = size
@@ -225,6 +225,7 @@ class Variable(TACEntity):
         self.status = status
         self.ast = ast
         self.type = _type
+        self.link = None
 
     def isMiddle(self):
         return self.status == 'mid'
@@ -233,16 +234,22 @@ class Variable(TACEntity):
         return self.status == 'loc'
 
     def __str__(self):
+        if self.link:
+            return str(self.link)
         return '{}.{}'.format(self.status, self.name)
+
+
+class RecordFieldAccessVariable(Variable):
+    pass
 
 
 class NameGenerator:
     counter = 0
 
-    def nextVariable(self, _type, status='mid'):
+    def nextVariable(self, _type, status='mid', Cls=Variable):
         var = '__t{}'.format(self.counter)
         self.counter += 1
-        return Variable(var, _type, status=status)
+        return Cls(var, _type, status=status)
 
 
 class LabelGenerator:
@@ -283,18 +290,9 @@ class BuildMiddleCodeListener(BaseASTListener):
                 ast.var = Const(ast.getDeepest().value, resType)
 
         elif fc.name == 'leftHandSide':
-            if ast.parent.name in ['recordFieldInitializer', 'argumentList']:
-                if fc.var.status == 'loc':
-                    ast.var = Variable(fc.var.name, fc.var.type, 'loc')
-                    ast.addCode([Push(ast.var)])
-                else:
-                    ast.var = fc.var
-            else:
-                ast.var = fc.var
-        elif fc.name == 'functionInvocation':
             ast.var = fc.var
-        elif fc.name in ['readIntCall', 'readStrCall', 'readBoolCall']:
-            ast.var = fc.var
+            if ast.parent.name in ['recordFieldInitializer', 'argumentList'] and fc.var.status == 'loc':
+                ast.addCode([Push(ast.var)])
         elif op:
             ast.var = self.ng.nextVariable(ast.type)
             if ast.isUnaryOperation():
@@ -305,15 +303,15 @@ class BuildMiddleCodeListener(BaseASTListener):
                 left = lAst.var
                 right = rAst.var
 
-                # todo monkey code :(
-                if isinstance(left, Variable) and left.status == 'loc':
-                    lAst.var = self.ng.nextVariable(left.type)
-                    lAst.addCode([TwoAC(lAst.var, left, left.type)])
-                    left = lAst.var
-                if isinstance(right, Variable) and right.status == 'loc':
-                    rAst.var = self.ng.nextVariable(right.type)
-                    rAst.addCode([TwoAC(rAst.var, right, right.type)])
-                    right = rAst.var
+                # # todo monkey code :(
+                # if isinstance(left, Variable) and left.status == 'loc':
+                #     lAst.var = self.ng.nextVariable(left.type)
+                #     lAst.addCode([TwoAC(lAst.var, left, left.type)])
+                #     left = lAst.var
+                # if isinstance(right, Variable) and right.status == 'loc':
+                #     rAst.var = self.ng.nextVariable(right.type)
+                #     rAst.addCode([TwoAC(rAst.var, right, right.type)])
+                #     right = rAst.var
 
                 if op in ['&&', '||']:
                     condLabel = LABEL_GENERATOR.nextLabel()
@@ -334,6 +332,10 @@ class BuildMiddleCodeListener(BaseASTListener):
                 else:
                     ast.addCode([ThreeAC(ast.var, left, op, right, ast.type)])
         elif fc.name == 'recordInitializer':
+            ast.var = fc.var
+        elif fc.name == 'functionInvocation':
+            ast.var = fc.var
+        elif fc.name in ['readIntCall', 'readStrCall', 'readBoolCall']:
             ast.var = fc.var
 
     def enterWritelnCall(self, ast):
@@ -466,9 +468,9 @@ class BuildMiddleCodeListener(BaseASTListener):
     def recordAccessCode(self, ast):
         fc = ast.getFirstChild()
         if fc.name == 'Identifier':
-            ast.var = Variable(fc.value, fc.parent.type, status='loc')
+            ast.var = RecordFieldAccessVariable(fc.value, fc.parent.type, status='loc')
             return ast.var
-        ast.var = self.ng.nextVariable(ast.type)
+        ast.var = self.ng.nextVariable(ast.type, Cls=RecordFieldAccessVariable)
         sc = ast.getLastChild()
         leftVar = self.recordAccessCode(fc)
         ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
@@ -477,9 +479,9 @@ class BuildMiddleCodeListener(BaseASTListener):
     def recordAccessPenultFieldCode(self, ast, prev=None):
         fc = ast.getFirstChild()
         if fc.name == 'Identifier':
-            ast.var = Variable(fc.value, fc.parent.type, status='loc')
+            ast.var = RecordFieldAccessVariable(fc.value, fc.parent.type, status='loc')
             return fc.parent.type, ast.var
-        ast.var = self.ng.nextVariable(ast.type)
+        ast.var = self.ng.nextVariable(ast.type, Cls=RecordFieldAccessVariable)
         sc = ast.getLastChild()
         _, leftVar = self.recordAccessPenultFieldCode(fc, ast)
         if prev:
@@ -487,3 +489,99 @@ class BuildMiddleCodeListener(BaseASTListener):
         else:
             ast.addCode([TwoAC(self.ng.nextVariable(ast.type), leftVar, ast.type)])
         return ast.getFirstChild().type, ast.var
+
+
+def extractBaseBlocks(ast):
+    l = ExtractBaseBlockListener()
+    walkAST(l, ast)
+    return l.bbs
+
+
+class ExtractBaseBlockListener(BaseASTListener):
+    def __init__(self):
+        self.bbs = []
+
+    def exitBlock(self, ast):
+        bb = []
+        for c in ast.getChildren():
+            fc = c.getFirstChild()
+            if fc.name in ['variableDeclaration', 'assignment']:
+                bb.append(fc)
+            else:
+                if bb:
+                    self.bbs.append(bb)
+                bb = []
+        if bb:
+            self.bbs.append(bb)
+
+
+def optimize(ast):
+    bbs = extractBaseBlocks(ast)
+    opt = OptimizerListener()
+    for bb in bbs:
+        cache = {}
+        rCache = {}
+        for statement in bb:
+            walkAST(opt, statement, cache, rCache)
+            pprint(cache)
+
+
+class OptimizerListener(BaseASTListener):
+    def getId(self, var):
+        return var.name if isinstance(var, Variable) else str(var)
+
+    def goLink(self, var):
+        if isinstance(var, Variable) and var.link:
+            return var.link
+        return var
+
+    def addToRCache(self, var, rCache, text):
+        s = self.getId(var)
+        if s not in rCache:
+            rCache[s] = set()
+        rCache[s].add(text)
+
+    def exitExpression(self, ast, cache, rCache):
+        fc = ast.getFirstChild()
+        op = ast.getOperator().value if ast.getOperator() else None
+
+        if not op:
+            return
+        if ast.isUnaryOperation():
+            var = ast.getLastChild().var
+            if isinstance(var, RecordFieldAccessVariable):
+                return
+            text = '{} {}'.format(op, self.getId(var))
+            self.addToRCache(var, rCache, text)
+        else:
+            lAst = fc
+            rAst = ast.getLastChild()
+            left = self.goLink(lAst.var)
+            right = self.goLink(rAst.var)
+
+            if isinstance(left, RecordFieldAccessVariable):
+                return
+            if isinstance(right, RecordFieldAccessVariable):
+                return
+            text = '{} {} {}'.format(self.getId(left), op, self.getId(right))
+            self.addToRCache(left, rCache, text)
+            self.addToRCache(right, rCache, text)
+        if text not in cache:
+            cache[text] = ast.var
+        else:
+            var = cache[text]
+            var.status = 'loc'
+            ast.var.link = var
+
+    def removeFromCaches(self, var, cache, rCache):
+        dirties = []
+        for text in rCache.get(var, []):
+            if text in cache:
+                dirties.append(self.getId(cache[text]))
+                del cache[text]
+        for d in dirties:
+            self.removeFromCaches(d, cache, rCache)
+
+    def exitAssignment(self, ast, cache, rCache):
+        dirty = self.getId(ast.getFirstChild().var)
+        self.removeFromCaches(dirty, cache, rCache)

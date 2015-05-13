@@ -53,7 +53,9 @@ class ASTNode:
             parent = parent.parent
 
     def __str__(self):
-        return self.name + str(self.source) + ('[{}]'.format(getattr(self, 'type')) if hasattr(self, 'type') else '')
+        res = self.name + str(self.source) + ('[{}]'.format(getattr(self, 'type')) if hasattr(self, 'type') else '')
+        res += '[var {}]'.format(self.var) if hasattr(self, 'var') else ''
+        return res
 
     def __repr__(self):
         return str(self)
@@ -332,7 +334,7 @@ class ExpressionASTNode(NonTerminalASTNode):
     def __str__(self):
         o = self.getOperator()
         if o:
-            return '[{}]expression'.format(o.value)
+            return '[{}]expression{}'.format(o.value, '[var {}]'.format(self.var) if hasattr(self, 'var') else '')
         return NonTerminalASTNode.__str__(self)
 
 
