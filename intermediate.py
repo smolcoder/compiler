@@ -239,6 +239,9 @@ class Variable(TACEntity):
             return str(self.link)
         return '{}.{}'.format(self.status, self.name)
 
+    def __repr__(self):
+        return str(self)
+
 
 class RecordFieldAccessVariable(TACEntity):
     def __init__(self, ast):
@@ -370,20 +373,45 @@ class OptimizerListener(BaseASTListener):
         if not op:
             return
         if ast.isUnaryOperation():
-            child__var = str(ast.getLastChild().var)
-            text = '{} {}'.format(op, child__var)
-            if child__var not in rCache:
-                rCache[child__var] = []
-            rCache[child__var].append(text)
+            var = ast.getLastChild().var
+            if isinstance(var, RecordFieldAccessVariable):
+                return
+            text = '{} {}'.format(op, var)
+            if str(var) not in rCache:
+                rCache[str(var)] = []
+            rCache[str(var)].append(text)
         else:
             lAst = fc
             rAst = ast.getLastChild()
             left = lAst.var
             right = rAst.var
+            if isinstance(left, RecordFieldAccessVariable):
+                return
+            if isinstance(right, RecordFieldAccessVariable):
+                return
             text = '{} {} {}'.format(left, op, right)
+            if str(left) not in rCache:
+                rCache[str(left)] = []
+            rCache[str(left)].append(text)
+            if str(right) not in rCache:
+                rCache[str(right)] = []
+            rCache[str(right)].append(text)
         if text not in cache:
             cache[text] = ast.var
         else:
             var = cache[text]
             var.status = 'loc'
             ast.var.link = var
+
+    def removeFromCaches(self, var, cache, rCache):
+        dirties = []
+        for text in rCache.get(var, []):
+            if text in cache:
+                dirties.append(str(cache[text]))
+                del cache[text]
+        for d in dirties:
+            self.removeFromCaches(d, cache, rCache)
+
+    def exitAssignment(self, ast, cache, rCache):
+        dirty = str(ast.getFirstChild().var)
+        self.removeFromCaches(dirty, cache, rCache)
