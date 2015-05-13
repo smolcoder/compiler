@@ -96,7 +96,6 @@ cortegeType
 
 cortegeTypeUnit
     : primitiveType
-    | cortegeType
     ;
 
 cortegeTypeNonEmptyList

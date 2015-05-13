@@ -100,6 +100,7 @@ class TypeCheckListener(BaseASTListener):
             t, e = getVariableType(fc, env)
         elif fc.name == 'cortegeAccess':
             t, e = getCortegeAccessType(fc)
+            fc.type = t
         else:
             t, _, e = getFieldAccessType(fc, self.env)
         if e:
@@ -237,6 +238,7 @@ def getFieldAccessType(rfa, globalEnv, env=None):
         if e:
             return None, None, e
         rfa.type = t
+        right.type = t
         return t, env, e
     t, e = getVariableType(right, env)
     if e:

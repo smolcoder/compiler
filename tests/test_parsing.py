@@ -19,8 +19,9 @@ class ParsingTestCase(BaseTestCase):
         self.assertHasNoError('{for(Int i = 0; i < 10; i += 1) {readInt();}}')
 
     def test_cortege_with_record(self):
-        self.assertHasNoError('[Int, Str, Bool, [Int, Str]] ok;')
-        self.assertHasError('[Int, Str, Bool, [Int, Str], SomeRecord] ok;')
+        self.assertHasNoError('[Int, Str, Bool] ok;')
+        self.assertHasError('[Int, Str, [Str, Bool]] ok;')
+        self.assertHasError('[Int, Str, SomeRecord] ok;')
 
     def test_none_type(self):
         self.assertHasError('None none;')
@@ -35,6 +36,4 @@ class ParsingTestCase(BaseTestCase):
     def test_for_statement(self):
         self.assertHasNoError('{for (Int i = 1; i < 10; i += 1) {}}')
         self.assertHasError('{for (Int i = 1; i = 10; i += 1) {}}')
-        # self.assertHasNoError('{Int i; for (; i < 10; i += 1) {}}')
-        # self.assertHasNoError('{Int i; for (;; i += 1) {}}')
         self.assertHasError('{for (Int i = 1; i >= 10; i * 5) {}}')

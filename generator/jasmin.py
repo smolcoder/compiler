@@ -1,3 +1,6 @@
+from semantic.typechecker import isCortege
+
+
 class JasminBaseGenerator:
     def __init__(self, ast, filename='Main'):
         """
@@ -17,6 +20,8 @@ class JasminBaseGenerator:
         pass
 
     def getType(self, actualType):
+        if isCortege(actualType):
+            return '[Ljava/lang/Object;'
         if actualType == 'Int':
             return 'I'
         if actualType == 'Bool':

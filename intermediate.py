@@ -172,7 +172,6 @@ class IfNe(IntermediateCode):
         return '.ifne {} != 0 goto {}'.format(self.var, self.label)
 
 
-
 class NewArray(IntermediateCode):
     def __init__(self, size):
         self.size = size
@@ -191,7 +190,22 @@ class AAstore(IntermediateCode):
         self.isLast = isLast
 
     def __str__(self):
-        return 'store {} at {}'.format(self.var, self.index, self.isLast)
+        return 'store {} at {}'.format(self.var, self.index)
+
+
+class CortegeAccess(IntermediateCode):
+    def __init__(self, varFrom, varTo, index, _type):
+        """
+        :type varFrom: Variable
+        :type varTo: Variable
+        """
+        self.varFrom = varFrom
+        self.varTo = varTo
+        self.index = index
+        self.type = _type
+
+    def __str__(self):
+        return 'load {}[{}] to {}'.format(self.varFrom, self.index, self.varTo)
 
 
 class PutField:
@@ -276,14 +290,14 @@ class BuildMiddleCodeListener(BaseASTListener):
 
         if fc.name == 'literal':
             resType = fc.getFirstChild().type
-            if ast.parent.name in ['recordFieldInitializer', 'argumentList']:
+            if ast.parent.name in ['recordFieldInitializer', 'argumentList', 'expressionList']:
                 ast.var = self.ng.nextVariable(ast.type)
                 ast.addCode([TwoAC(ast.var, Const(ast.getDeepest().value, resType), resType)])
             else:
                 ast.var = Const(ast.getDeepest().value, resType)
 
         elif fc.name == 'leftHandSide':
-            if ast.parent.name in ['recordFieldInitializer', 'argumentList']:
+            if ast.parent.name in ['recordFieldInitializer', 'argumentList', 'expressionList']:
                 if fc.var.status == 'loc':
                     ast.var = Variable(fc.var.name, fc.var.type, 'loc')
                     ast.addCode([Push(ast.var)])
@@ -335,6 +349,8 @@ class BuildMiddleCodeListener(BaseASTListener):
                     ast.addCode([ThreeAC(ast.var, left, op, right, ast.type)])
         elif fc.name == 'recordInitializer':
             ast.var = fc.var
+        elif fc.name == 'cortegeInitializer':
+            ast.var = fc.var
 
     def enterWritelnCall(self, ast):
         ast.addCodeBefore([NewArray(len(ast.getFirstChild().getChildren()))])
@@ -350,6 +366,17 @@ class BuildMiddleCodeListener(BaseASTListener):
         ast.var = self.ng.nextVariable(ast.type)
         types = [e.type for e in ast.getLastChild().getChildren()]
         ast.addCode([CallFunction(ast.var, ast.getFirstChild().value, ast.type, types)])
+
+    # todo duplicated code, see enter/exit WritelnCall
+    def enterCortegeInitializer(self, ast):
+        ast.addCodeBefore([NewArray(len(ast.getFirstChild().getChildren()))])
+
+    def exitCortegeInitializer(self, ast):
+        ast.var = self.ng.nextVariable(ast.type)
+        children = ast.getFirstChild().getChildren()
+        for i, e in enumerate(children):
+            e.addCodeBefore([Push(Const(str(i), 'Int'))])
+            e.addCodeAfter([AAstore(e.var, i, i+1 == len(children))])
 
     def enterRecordInitializer(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
@@ -371,6 +398,13 @@ class BuildMiddleCodeListener(BaseASTListener):
                 ast.parent.addCodeAfter([PutField(fc.getLastChild().value, ast.var.type, prevType)])
             else:
                 ast.var = self.recordAccessCode(fc)
+        elif fc.name == 'cortegeAccess':
+            ast.var = self.ng.nextVariable(ast.type)
+            # if ast.parent.name == 'assignment' and ast.parent.getFirstChild() is ast:
+            var = Variable(fc.getFirstChild().value, fc.type, status='loc', ast=ast)
+            ast.addCodeBefore([CortegeAccess(var, ast.var, fc.getLastChild().value, fc.type)])
+            # else:
+            #     ast.addCode([CortegeAccess(ast.var, fc.getLastChild().value, fc.type, ast.var)])
 
     def exitAssignment(self, ast):
         left = ast.getFirstChild().var
@@ -471,7 +505,12 @@ class BuildMiddleCodeListener(BaseASTListener):
         ast.var = self.ng.nextVariable(ast.type)
         sc = ast.getLastChild()
         leftVar = self.recordAccessCode(fc)
-        ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
+        if sc.name == 'cortegeAccess':
+            cVar = self.ng.nextVariable(sc.type)
+            ast.addCode([AccessRecordField(cVar, leftVar, sc.getFirstChild().value, ast.type)])
+            ast.addCode([CortegeAccess(ast.var, sc.getLastChild().value, sc.type)])
+        else:
+            ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
         return ast.var
 
     def recordAccessPenultFieldCode(self, ast, prev=None):

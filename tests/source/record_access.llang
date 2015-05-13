@@ -13,7 +13,7 @@ record Name {
 record Address {
     Str street;
     Int home;
-    [Int, [Bool, Str]] c;
+    [Int, Bool, Str] c;
 }
 
 record Person {

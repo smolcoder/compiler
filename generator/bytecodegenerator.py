@@ -3,6 +3,7 @@ from generator.jasmin import JasminBaseGenerator, GET_MNEMONIC_CMP, GET_MNEMONIC
 from generator.linker import linkCode
 from intermediate import *
 from localvartable import LocalVariableTable
+from semantic.typechecker import isCortege
 from utils import isRecord
 
 
@@ -35,7 +36,7 @@ class ByteCodeGenerator(JasminBaseGenerator):
 
     def putLocalArg(self, name):
         info = self.lvt.get(name)
-        if isRecord(info['type']) or info['type'] == 'Str':
+        if isRecord(info['type']) or info['type'] == 'Str' or isCortege(info['type']):
             return self.astore(str(info['number']))
         return self.istore(str(info['number']))
 

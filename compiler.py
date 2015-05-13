@@ -79,8 +79,8 @@ class Compiler:
 
         createVariableTables(ast)
         middleCode = makeTAC(ast)
-
         return CompilerResult(ast=ast, globalEnv=globalEnv, middleCode=middleCode)
+        # return CompilerResult(ast=ast, globalEnv=globalEnv, middleCode=None)
 
     def typeCheck(self, ast, env):
         return typeCheck(ast, env)
