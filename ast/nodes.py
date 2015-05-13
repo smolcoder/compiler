@@ -53,7 +53,9 @@ class ASTNode:
             parent = parent.parent
 
     def __str__(self):
-        return self.name + str(self.source) + ('[{}]'.format(getattr(self, 'type')) if hasattr(self, 'type') else '')
+        res = self.name + str(self.source) + ('[{}]'.format(getattr(self, 'type')) if hasattr(self, 'type') else '')
+        res += '[var {}]'.format(self.var) if hasattr(self, 'var') else ''
+        return res
 
     def __repr__(self):
         return str(self)
@@ -95,6 +97,9 @@ class ASTNode:
         array = []
         walkAST(listener, self, name, array)
         return array
+
+    def getText(self):
+        pass
 
 
 class TerminalASTNode(ASTNode):
@@ -238,6 +243,17 @@ class PrimitiveTypeASTNode(TerminalASTNode):
         self.typeName = value
 
 
+class RecordFieldAccessASTNode(NonTerminalASTNode):
+    def __init__(self, source):
+        NonTerminalASTNode.__init__(self, 'recordFieldAccess', source)
+
+    def getText(self):
+        code = ''
+        if self.getFirstChild().name == 'recordFieldAccess':
+            code = self.getFirstChild().getText() + '.'
+        return code + self.getLastChild().value
+
+
 class OperatorASTNode(TerminalASTNode):
     """
     There is not enough checks!!! Use it carefully
@@ -332,7 +348,7 @@ class ExpressionASTNode(NonTerminalASTNode):
     def __str__(self):
         o = self.getOperator()
         if o:
-            return '[{}]expression'.format(o.value)
+            return '[{}]expression{}'.format(o.value, '[var {}]'.format(self.var) if hasattr(self, 'var') else '')
         return NonTerminalASTNode.__str__(self)
 
 

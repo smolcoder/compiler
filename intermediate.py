@@ -1,4 +1,5 @@
-from ast import CYCLES, BaseASTListener, TerminalASTNode
+from pprint import pprint
+from ast import CYCLES, BaseASTListener, TerminalASTNode, walkAST, pprintAST
 
 
 class IntermediateCode:
@@ -225,6 +226,7 @@ class Variable(TACEntity):
         self.status = status
         self.ast = ast
         self.type = _type
+        self.link = None
 
     def isMiddle(self):
         return self.status == 'mid'
@@ -233,7 +235,18 @@ class Variable(TACEntity):
         return self.status == 'loc'
 
     def __str__(self):
+        if self.link:
+            return str(self.link)
         return '{}.{}'.format(self.status, self.name)
+
+
+class RecordFieldAccessVariable(TACEntity):
+    def __init__(self, ast):
+        self.ast = ast
+        self.type = ast.type
+
+    def __str__(self):
+        return self.ast.getText()
 
 
 class NameGenerator:
@@ -258,6 +271,7 @@ LABEL_GENERATOR = LabelGenerator()
 
 
 class BuildMiddleCodeListener(BaseASTListener):
+    # todo remove code addition
     def __init__(self, globalEnv):
         self.globalEnv = globalEnv
         self.ng = NameGenerator()
@@ -270,220 +284,106 @@ class BuildMiddleCodeListener(BaseASTListener):
             ast.addCode([Return(var.type, var)])
 
     def exitExpression(self, ast):
-        # todo refactoring is needed
         fc = ast.getFirstChild()
         op = ast.getOperator().value if ast.getOperator() else None
 
         if fc.name == 'literal':
-            resType = fc.getFirstChild().type
-            if ast.parent.name in ['recordFieldInitializer', 'argumentList']:
-                ast.var = self.ng.nextVariable(ast.type)
-                ast.addCode([TwoAC(ast.var, Const(ast.getDeepest().value, resType), resType)])
-            else:
-                ast.var = Const(ast.getDeepest().value, resType)
-
-        elif fc.name == 'leftHandSide':
-            if ast.parent.name in ['recordFieldInitializer', 'argumentList']:
-                if fc.var.status == 'loc':
-                    ast.var = Variable(fc.var.name, fc.var.type, 'loc')
-                    ast.addCode([Push(ast.var)])
-                else:
-                    ast.var = fc.var
-            else:
-                ast.var = fc.var
-        elif fc.name == 'functionInvocation':
-            ast.var = fc.var
-        elif fc.name in ['readIntCall', 'readStrCall', 'readBoolCall']:
-            ast.var = fc.var
+            ast.var = Const(ast.getDeepest().value, fc.getFirstChild().type)
         elif op:
             ast.var = self.ng.nextVariable(ast.type)
-            if ast.isUnaryOperation():
-                ast.addCode([TwoACOp(ast.var, op, ast.getLastChild().var, ast.type)])
-            else:
-                lAst = fc
-                rAst = ast.getLastChild()
-                left = lAst.var
-                right = rAst.var
-
-                # todo monkey code :(
-                if isinstance(left, Variable) and left.status == 'loc':
-                    lAst.var = self.ng.nextVariable(left.type)
-                    lAst.addCode([TwoAC(lAst.var, left, left.type)])
-                    left = lAst.var
-                if isinstance(right, Variable) and right.status == 'loc':
-                    rAst.var = self.ng.nextVariable(right.type)
-                    rAst.addCode([TwoAC(rAst.var, right, right.type)])
-                    right = rAst.var
-
-                if op in ['&&', '||']:
-                    condLabel = LABEL_GENERATOR.nextLabel()
-                    endLabel = LABEL_GENERATOR.nextLabel()
-                    if op == '&&':
-                        lAst.addCodeAfter([IfEq(left, condLabel)])
-                        rAst.addCodeAfter([IfEq(right, condLabel)])
-                    else:
-                        lAst.addCodeAfter([IfNe(left, condLabel)])
-                        rAst.addCodeAfter([IfNe(right, condLabel)])
-                    const1 = op == '&&'
-                    const2 = op == '||'
-                    ast.addCodeAfter([PushBoolConst(const1),
-                                      GoTo(endLabel),
-                                      Label(condLabel),
-                                      PushBoolConst(const2),
-                                      Label(endLabel)])
-                else:
-                    ast.addCode([ThreeAC(ast.var, left, op, right, ast.type)])
+        elif fc.name == 'functionInvocation':
+            ast.var = fc.var
+        elif fc.name == 'readIntCall':
+            ast.var = fc.var
+        elif fc.name == 'readStrCall':
+            ast.var = fc.var
+        elif fc.name == 'readBoolCall':
+            ast.var = fc.var
+        elif fc.name == 'leftHandSide':
+            ast.var = fc.var
         elif fc.name == 'recordInitializer':
             ast.var = fc.var
 
-    def enterWritelnCall(self, ast):
-        ast.addCodeBefore([NewArray(len(ast.getFirstChild().getChildren()))])
-
-    def exitWritelnCall(self, ast):
-        children = ast.getFirstChild().getChildren()
-        for i, e in enumerate(children):
-            e.addCodeBefore([Push(Const(str(i), 'Int'))])
-            e.addCodeAfter([AAstore(e.var, i, i+1 == len(children))])
-        ast.addCodeAfter([WriteLnCall()])
-
     def exitFunctionInvocation(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
-        types = [e.type for e in ast.getLastChild().getChildren()]
-        ast.addCode([CallFunction(ast.var, ast.getFirstChild().value, ast.type, types)])
 
     def enterRecordInitializer(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
-        ast.addCodeBefore([NewRecord(ast.getFirstChild().value)])
-
-    def exitRecordInitializer(self, ast):
-        types = []
-        if not isinstance(ast.getLastChild(), TerminalASTNode):
-            types = [f.getLastChild().type for f in ast.getLastChild().getChildren()]
-        ast.addCode([CreateRecord(ast.var, ast.getFirstChild().value, types)])
 
     def exitLeftHandSide(self, ast):
         fc = ast.getFirstChild()
         if fc.name == 'Identifier':
             ast.var = Variable(fc.value, ast.type, status='loc')
         elif fc.name == 'recordFieldAccess':
-            if ast.parent.name == 'assignment' and ast.parent.getFirstChild() is ast:
-                prevType, ast.var = self.recordAccessPenultFieldCode(fc)
-                ast.parent.addCodeAfter([PutField(fc.getLastChild().value, ast.var.type, prevType)])
-            else:
-                ast.var = self.recordAccessCode(fc)
-
-    def exitAssignment(self, ast):
-        left = ast.getFirstChild().var
-        op = ast.getChild(1).value
-        right = ast.getLastChild().var
-        if op in ['+=', '-=', '*=', '/=', '%=']:
-            ast.addCode([ThreeAC(left, left, op[0], right, ast.getFirstChild().type)])
-        else:
-            ast.addCode([TwoAC(left, right, ast.getFirstChild().type)])
-
-    def exitVariableDeclaration(self, ast):
-        expr = ast.getLastChild()
-        if expr.name == 'expression':
-            ast.addCode([TwoAC(Variable(ast.getChild(1).value, expr.type, status='loc'), expr.var, expr.type)])
-
-    def enterIf(self, ast):
-        ast.endLabel = LABEL_GENERATOR.nextLabel()
-
-    def exitIf(self, ast):
-        block = ast.getBlockIfTrue()
-
-        if not ast.getElifs() and not ast.getElse():
-            block.addCodeBefore([TestCondition(ast.getCondition().var, ast.endLabel)])
-        else:
-            l = LABEL_GENERATOR.nextLabel()
-            block.addCodeBefore([TestCondition(ast.getCondition().var, l)])
-            block.addCodeAfter([GoTo(ast.endLabel), Label(l)])
-        ast.addCodeAfter([Label(ast.endLabel)])
-
-    def exitElse(self, ast):
-        ast.addCodeAfter([Label(ast.parent.endLabel)])
-
-    def exitElif(self, ast):
-        block = ast.getBlock()
-        l = LABEL_GENERATOR.nextLabel()
-        block.addCodeBefore([TestCondition(ast.getCondition().var, l)])
-        block.addCodeAfter([GoTo(ast.parent.endLabel), Label(l)])
-
-    def enterWhileStatement(self, ast):
-        ast.startLabel = LABEL_GENERATOR.nextLabel()
-        ast.endLabel = LABEL_GENERATOR.nextLabel()
-
-    def exitWhileStatement(self, ast):
-        expr = ast.getFirstChild()
-        block = ast.getLastChild()
-        expr.addCodeBefore([Label(ast.startLabel)])
-        expr.addCodeAfter([TestCondition(expr.var, ast.endLabel)])
-        block.addCodeAfter([GoTo(ast.startLabel), Label(ast.endLabel)])
-
-    def visitBreak(self, ast):
-        ast.addCode([GoTo(ast.getFirstParentByName(CYCLES).endLabel)])
-
-    def visitContinue(self, ast):
-        ast.addCode([GoTo(ast.getFirstParentByName(CYCLES).startLabel)])
-
-    def enterForStatement(self, ast):
-        ast.startLabel = LABEL_GENERATOR.nextLabel()
-        ast.endLabel = LABEL_GENERATOR.nextLabel()
-
-    def exitForStatement(self, ast):
-        ast.addCodeAfter([Label(ast.endLabel)])
-
-    def exitForCondition(self, ast):
-        ast.addCodeBefore([Label(ast.parent.startLabel)])
-        ast.addCodeAfter([TestCondition(ast.getFirstChild().var, ast.parent.endLabel)])
-
-    def exitForUpdate(self, ast):
-        ast.addCodeAfter([GoTo(ast.parent.startLabel)])
-
-    def exitFunctionDeclaration(self, ast):
-        name = ast.getFirstChild().getName()
-        ast.addCodeBefore([50 * '.' + 'start {}'.format(name)])
-        ast.addCodeAfter([50 * '.' + 'end {}'.format(name)])
-
-    def exitProgramme(self, ast):
-        block = ast.getJustBlock()
-        if block:
-            block.addCodeBefore(['.start main'])
-            block.addCodeAfter(['.end main'])
+            ast.var = RecordFieldAccessVariable(fc)
 
     def exitReadIntCall(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
-        ast.addCode([ReadCall(ast.var)])
 
     def exitReadBoolCall(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
-        ast.addCode([ReadCall(ast.var)])
 
     def exitReadStrCall(self, ast):
         ast.var = self.ng.nextVariable(ast.type)
-        ast.addCode([ReadCall(ast.var)])
 
-    def recordAccessCode(self, ast):
-        fc = ast.getFirstChild()
-        if fc.name == 'Identifier':
-            ast.var = Variable(fc.value, fc.parent.type, status='loc')
-            return ast.var
-        ast.var = self.ng.nextVariable(ast.type)
-        sc = ast.getLastChild()
-        leftVar = self.recordAccessCode(fc)
-        ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
-        return ast.var
 
-    def recordAccessPenultFieldCode(self, ast, prev=None):
+def extractBaseBlocks(ast):
+    l = ExtractBaseBlockListener()
+    walkAST(l, ast)
+    return l.bbs
+
+
+class ExtractBaseBlockListener(BaseASTListener):
+    def __init__(self):
+        self.bbs = []
+
+    def exitBlock(self, ast):
+        bb = []
+        for c in ast.getChildren():
+            fc = c.getFirstChild()
+            if fc.name in ['variableDeclaration', 'assignment']:
+               bb.append(fc)
+            else:
+                if bb:
+                    self.bbs.append(bb)
+                bb = []
+        if bb:
+            self.bbs.append(bb)
+
+
+def optimize(ast):
+    bbs = extractBaseBlocks(ast)
+    opt = OptimizerListener()
+    for bb in bbs:
+        cache = {}
+        rCache = {}
+        for statement in bb:
+            walkAST(opt, statement, cache, rCache)
+            pprint(cache)
+
+
+class OptimizerListener(BaseASTListener):
+    def exitExpression(self, ast, cache, rCache):
         fc = ast.getFirstChild()
-        if fc.name == 'Identifier':
-            ast.var = Variable(fc.value, fc.parent.type, status='loc')
-            return fc.parent.type, ast.var
-        ast.var = self.ng.nextVariable(ast.type)
-        sc = ast.getLastChild()
-        _, leftVar = self.recordAccessPenultFieldCode(fc, ast)
-        if prev:
-            ast.addCode([AccessRecordField(ast.var, leftVar, sc.value, ast.type)])
+        op = ast.getOperator().value if ast.getOperator() else None
+
+        if not op:
+            return
+        if ast.isUnaryOperation():
+            child__var = str(ast.getLastChild().var)
+            text = '{} {}'.format(op, child__var)
+            if child__var not in rCache:
+                rCache[child__var] = []
+            rCache[child__var].append(text)
         else:
-            ast.addCode([TwoAC(self.ng.nextVariable(ast.type), leftVar, ast.type)])
-        return ast.getFirstChild().type, ast.var
+            lAst = fc
+            rAst = ast.getLastChild()
+            left = lAst.var
+            right = rAst.var
+            text = '{} {} {}'.format(left, op, right)
+        if text not in cache:
+            cache[text] = ast.var
+        else:
+            var = cache[text]
+            var.status = 'loc'
+            ast.var.link = var

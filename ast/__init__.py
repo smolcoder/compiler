@@ -78,6 +78,9 @@ class ASTBuildListener(LLangListener):
     def enterExpression(self, ctx):
         ctx.ast = ExpressionASTNode(getSource(ctx))
 
+    def enterRecordFieldAccess(self, ctx):
+        ctx.ast = RecordFieldAccessASTNode(getSource(ctx))
+
     def exitExpression(self, ctx):
         if len(ctx.ast.getChildren()) == 1 and ctx.ast.getFirstChild().name == 'expression':
             ctx.ast = ctx.ast.getFirstChild()
