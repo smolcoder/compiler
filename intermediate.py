@@ -252,6 +252,9 @@ class NameGenerator:
         return Cls(var, _type, status=status)
 
 
+GLOBAL_NG = NameGenerator()
+
+
 class LabelGenerator:
     counter = 0
 
@@ -267,7 +270,15 @@ LABEL_GENERATOR = LabelGenerator()
 class BuildMiddleCodeListener(BaseASTListener):
     def __init__(self, globalEnv):
         self.globalEnv = globalEnv
-        self.ng = NameGenerator()
+        self.ng = GLOBAL_NG
+
+    def pushIfLocal(self, ast):
+        var = ast.var
+        # if isinstance(var, Variable) and var.status == 'loc':
+        #     ast.var = self.ng.nextVariable(var.type)
+        #     ast.addCode([TwoAC(ast.var, var, var.type)])
+        #     return ast.var
+        return var
 
     def exitReturn(self, ast):
         if not ast.getChildren():
@@ -277,7 +288,6 @@ class BuildMiddleCodeListener(BaseASTListener):
             ast.addCode([Return(var.type, var)])
 
     def exitExpression(self, ast):
-        # todo refactoring is needed
         fc = ast.getFirstChild()
         op = ast.getOperator().value if ast.getOperator() else None
 
@@ -300,18 +310,8 @@ class BuildMiddleCodeListener(BaseASTListener):
             else:
                 lAst = fc
                 rAst = ast.getLastChild()
-                left = lAst.var
-                right = rAst.var
-
-                # # todo monkey code :(
-                # if isinstance(left, Variable) and left.status == 'loc':
-                #     lAst.var = self.ng.nextVariable(left.type)
-                #     lAst.addCode([TwoAC(lAst.var, left, left.type)])
-                #     left = lAst.var
-                # if isinstance(right, Variable) and right.status == 'loc':
-                #     rAst.var = self.ng.nextVariable(right.type)
-                #     rAst.addCode([TwoAC(rAst.var, right, right.type)])
-                #     right = rAst.var
+                left = self.pushIfLocal(lAst)
+                right = self.pushIfLocal(rAst)
 
                 if op in ['&&', '||']:
                     condLabel = LABEL_GENERATOR.nextLabel()
@@ -518,6 +518,7 @@ class ExtractBaseBlockListener(BaseASTListener):
 def optimize(ast):
     bbs = extractBaseBlocks(ast)
     for bb in bbs:
+        print bb
         cache = {}
         rCache = {}
         opt = OptimizerListener(bb[0].getLVT())
@@ -598,18 +599,72 @@ class RemoveAllIntermediateListener(BaseASTListener):
         ast.code = []
         ast.codeAfter = []
         ast.codeBefore = []
-        ast.var = None
 
 
 class AdjustIntermediateListener(BaseASTListener):
-    def enterExpression(self, ast):
-        op = ast.getOperator().value if ast.getOperator() else None
+    def pushIfLocal(self, ast):
         var = ast.var
-        if not op or not isinstance(var, Variable) or not var.link:
+        if isinstance(var, Variable) and var.status == 'loc':
+            ast.var = GLOBAL_NG.nextVariable(var.type)
+            ast.addCode([TwoAC(ast.var, var, var.type)])
+            return ast.var
+        return var
+
+    def enterExpression(self, ast):
+        var = ast.var
+        if isinstance(var, Variable) and var.link:
+            l = RemoveAllIntermediateListener()
+            walkAST(l, ast)
+            ast.var = var
+
+    def exitExpression(self, ast):
+        # var = ast.var
+        # if isinstance(var, Variable) and var.link:
+        #     self.pushIfLocal(ast)
+        op = ast.getOperator().value if ast.getOperator() else None
+
+        lAst = ast.getFirstChild()
+        rAst = ast.getLastChild()
+
+        if ast.isUnaryOperation() and rAst.var.link:
+            ast.code, ast.codeAfter, ast.codeBefore = [], [], []
+            rAst.var = rAst.var.link
+            ast.addCode([TwoACOp(ast.var, op, rAst.var, ast.type)])
             return
-        l = RemoveAllIntermediateListener()
-        walkAST(l, ast)
-        ast.var = var.link
+        if ast.isBinaryOperation():
+            if not hasattr(lAst, 'var') or not hasattr(rAst, 'var'):
+                return
+            if not hasattr(lAst, 'var') or not hasattr(rAst, 'var'):
+                return
+            if not isinstance(lAst, Variable) or not isinstance(rAst, Variable):
+                return
+            ast.code = []
+            if lAst.var.link:
+                lAst.var = lAst.var.link
+            if rAst.var.link:
+                rAst.var = rAst.var.link
+
+            left = self.pushIfLocal(lAst)
+            right = self.pushIfLocal(rAst)
+
+            if op in ['&&', '||']:
+                condLabel = LABEL_GENERATOR.nextLabel()
+                endLabel = LABEL_GENERATOR.nextLabel()
+                if op == '&&':
+                    lAst.addCodeAfter([IfEq(left, condLabel)])
+                    rAst.addCodeAfter([IfEq(right, condLabel)])
+                else:
+                    lAst.addCodeAfter([IfNe(left, condLabel)])
+                    rAst.addCodeAfter([IfNe(right, condLabel)])
+                const1 = op == '&&'
+                const2 = op == '||'
+                ast.addCodeAfter([PushBoolConst(const1),
+                                  GoTo(endLabel),
+                                  Label(condLabel),
+                                  PushBoolConst(const2),
+                                  Label(endLabel)])
+            else:
+                ast.addCode([ThreeAC(ast.var, left, op, right, ast.type)])
 
 
 def adjustIntermediateCode(ast):

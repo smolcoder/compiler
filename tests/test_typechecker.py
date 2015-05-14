@@ -99,46 +99,21 @@ class TypeCheckerTestCase(BaseTestCase):
         self.assertHasError('fun foo():None{} {foo(3);}')
 
         self.assertHasNoError('record Rec {Int i;}'
-                              'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
-                              '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
+                              'fun foo(a:Int, b:Str, c:Rec):None {}'
+                              '{Str s; foo(1, s, new Rec(i=3));}')
         self.assertHasError('record Rec {Int i;}'
-                            'fun foo(a:Int, b:Str, c:Int, d:[Int, Bool, [Str, Int]]):None {}'
-                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
+                            'fun foo(a:Int, b:Str, c:Int):None {}'
+                            '{Str s; foo(1, s, new Rec(i=3));}')
         self.assertHasError('record Rec {Int i;}'
-                            'fun foo(a:Int, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
-                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
-
-        self.assertHasError('record Rec {Int i;}'
-                            'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
-                            '{Str s; foo(1, s, new Rec(i=3), [1, 4, ["s", 2]]);}')
-
-        self.assertHasError('record Rec {Int i;}'
-                            'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str, Int]]):None {}'
-                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]], g: Int);}')
-
-        self.assertHasError('record Rec {Int i;}'
-                            'fun foo(a:Int, b:Str, c:Rec, d:[Int, Bool, [Str]]):None {}'
-                            '{Str s; foo(1, s, new Rec(i=3), [1, true, ["s", 2]]);}')
+                            'fun foo(a:Int, c:Rec):None {}'
+                            '{Str s; foo(1, s, new Rec(i=3));}')
 
     def test_record_init(self):
         self.assertHasNoError('record Rec{} {Rec r = new Rec();}')
         self.assertHasError('record Rec{} {Rec r = new Rec(i=3);}')
 
-        self.assertHasNoError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
-                              '{Rec r = new Rec(a=1, b="str", c=[2, [false]]);}')
-        self.assertHasNoError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
-                              '{Rec r = new Rec(b="str", a=1, c=[2, [false]]);}')
-        self.assertHasNoError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
-                              'fun foo(r:Rec):None {}'
-                              '{foo(new Rec(a=1, b="str", c=[2, [false]]));}')
-
-        self.assertHasError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
-                            '{Rec r = new Rec(a=1, b="str", c=[2, ["false"]]);}')
-        self.assertHasError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
-                            '{Rec r = new Rec(b="str", c=[2, [false]]);}')
-        self.assertHasError('record Rec{Int a; Str b; [Int, [Bool]] c;}'
-                            'fun foo(r:Rec):None {}'
-                            '{foo(new Rec(a=1, b="str", c=[2, [false]], d=3));}')
+        self.assertHasNoError('record Rec{Int a; Str b; }'
+                              '{Rec r = new Rec(a=1, b="str");}')
 
     def test_if_statement(self):
         self.assertHasNoError('fun foo():Bool {return false;}'

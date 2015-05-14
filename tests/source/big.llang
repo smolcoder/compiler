@@ -94,28 +94,28 @@ fun doNothing():None {
 
     Str day = "day";
     writeln(day == "day");
-    writeln(!(day != "day") == (day == "day"));
-    writeln(factorial(5) == 120);
+    writeln(1, !(day != "day") == (day == "day"));
+    writeln(2, factorial(5) == 120);
     Bool f1 = true;
     Bool f2 = false;
-    writeln(!(f1 && f2) == ((!f1) || (!f2)));
+    writeln(3, !(f1 && f2) == ((!f1) || (!f2)));
     Int a = 1;
     Int b = -1000;
     Int c = 12345;
-    writeln(a + b + c == (a + b) + c);
-    writeln(a + b + c == a + (b + c));
-    writeln(a * b * c == a * (b * c));
-    writeln(a - b - c == a - (b + c));
-    writeln(a - b - c == (a - b) - c);
-    writeln(a + b == a - -b);
-    writeln(a > a - 1);
-    writeln(a < a + 1);
-    writeln(a >= a);
-    writeln(a <= a);
+    writeln(4, a + b + c == (a + b) + c);
+    writeln(5, a + b + c == a + (b + c));
+    writeln(6, a * b * c == a * (b * c));
+    writeln(7, a - b - c == a - (b + c));
+    writeln(8, a - b - c == (a - b) - c);
+    writeln(9, a + b == a - -b);
+    writeln(10, a > a - 1);
+    writeln(11, a < a + 1);
+    writeln(12, a >= a);
+    writeln(13, a <= a);
     r1.i = 2;
-    writeln(r1.i == 2);
+    writeln(14, r1.i == 2);
     r3.r2.r1.s = "new str";
-    writeln(r3.r2.r1.s == "new str");
+    writeln(15, r3.r2.r1.s == "new str");
 
     Int d = 1;
     Str sDay;
@@ -128,9 +128,9 @@ fun doNothing():None {
     } else {
         sDay = "-";
     }
-    writeln(sDay == "Monday");
 
-    writeln(gcd(27, 4) == 1);
-    writeln(gcd(25, 5) == 5);
-    writeln(gcd(27, 18) == 9);
+    writeln(16, gcd(27, 4) == 1);
+    writeln(17, gcd(25, 5) == 5);
+    writeln(18, gcd(27, 18) == 9);
+    writeln(19, sDay == "Monday");
 }

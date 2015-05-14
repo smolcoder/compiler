@@ -5,7 +5,7 @@ from tests import BaseTestCase
 from utils import here
 
 
-class ClinitGeneratorTestCase(BaseTestCase):
+class GeneratorTestCase(BaseTestCase):
     pathToOut = here('test_out')
     classpath = pathToOut
     pathToJar = here('lib')
